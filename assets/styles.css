@@ -68,6 +68,7 @@ nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(16px) saturate(150%);b
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .hero h1{font-size:clamp(2.3rem,5.2vw,4rem);font-weight:900;line-height:1.03;letter-spacing:-.035em;margin-bottom:22px}
 .hero h1 .accent{color:var(--red)}
+.hero h1.slogan{font-size:clamp(2rem,4.35vw,3.6rem);line-height:1.08;letter-spacing:-.045em}.hero h1.slogan .accent{background:linear-gradient(135deg,var(--red-bright),var(--red-deep));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 12px 30px var(--red-glow)}
 .hero p{color:var(--muted);font-size:clamp(1.02rem,1.5vw,1.2rem);max-width:520px;margin-bottom:34px}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 27px;border-radius:99px;font-weight:600;font-size:.95rem;cursor:pointer;border:1px solid transparent;transition:transform .2s,box-shadow .2s}
