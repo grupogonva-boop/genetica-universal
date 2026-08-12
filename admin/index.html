@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'">
+  <title>Administrador · Genética Universal</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="ambient a"></div><div class="ambient b"></div>
+  <main>
+    <header class="brand"><div class="brand-mark">GU</div><div><b>GENÉTICA UNIVERSAL</b><small>Centro de administración</small></div><span class="secure">● CONEXIÓN SEGURA</span></header>
+
+    <section class="login-card" id="loginView">
+      <div class="login-icon">↗</div><p class="eyebrow">ACCESO RESTRINGIDO</p><h1>Bienvenido de vuelta</h1><p>Importa y valida el catálogo genómico antes de publicarlo.</p>
+      <form id="loginForm">
+        <label>Correo electrónico<input id="email" name="email" type="email" value="richard4790.rg@gmail.com" autocomplete="username" required></label>
+        <label>Contraseña<input id="password" name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Ingresar al administrador</button><div class="form-status" id="loginStatus" role="status"></div>
+      </form>
+    </section>
+
+    <section class="dashboard" id="dashboard" hidden>
+      <div class="dash-head"><div><p class="eyebrow">CATÁLOGO GENÓMICO</p><h1>Importador de sementales</h1><p>Excel → mapeo → validación → catálogo.</p></div><div class="dash-actions"><span id="currentUser"></span><button class="ghost" id="logout">Cerrar sesión</button></div></div>
+      <div class="kpis"><article><small>REGISTRADOS</small><strong id="totalSires">0</strong></article><article><small>ACTIVOS</small><strong id="activeSires">0</strong></article><article><small>A2/A2</small><strong id="a2Sires">0</strong></article><article><small>ÚLTIMA CARGA</small><strong id="lastImport">—</strong></article></div>
+
+      <div class="workspace">
+        <section class="panel upload-panel">
+          <div class="panel-title"><span>01</span><div><h2>Selecciona el archivo</h2><p>.xlsx, .xls o .csv · máximo 500 filas</p></div><button class="text-btn" id="downloadTemplate">Descargar plantilla</button></div>
+          <label class="drop-zone" id="dropZone"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><span class="drop-icon">⇧</span><b>Arrastra tu Excel aquí</b><small>o haz clic para buscarlo</small></label>
+          <div class="file-chip" id="fileChip" hidden><span>✓</span><div><b id="fileName"></b><small id="fileMeta"></small></div><button id="removeFile" aria-label="Quitar archivo">×</button></div>
+        </section>
+
+        <section class="panel" id="mappingPanel" hidden>
+          <div class="panel-title"><span>02</span><div><h2>Confirma el mapeo</h2><p>Detectamos automáticamente los encabezados. Código y nombre son obligatorios.</p></div></div>
+          <div class="mapping-grid" id="mappingGrid"></div>
+        </section>
+
+        <section class="panel" id="previewPanel" hidden>
+          <div class="panel-title"><span>03</span><div><h2>Revisa antes de publicar</h2><p id="validationSummary">Sin procesar</p></div></div>
+          <div class="alert" id="validationAlert" hidden></div>
+          <div class="preview-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>NM$</th><th>CM$</th><th>Leche</th><th>Beta</th><th>Kappa</th><th>Estado</th></tr></thead><tbody id="previewRows"></tbody></table></div>
+          <div class="publish-row"><p>Las columnas adicionales se conservarán en el expediente genómico 360°.</p><button id="publish" disabled>Publicar catálogo <span>→</span></button></div>
+          <div class="form-status" id="publishStatus" role="status"></div>
+        </section>
+
+        <section class="panel existing-panel">
+          <div class="panel-title"><span>04</span><div><h2>Catálogo almacenado</h2><p>Últimos registros guardados en la base administrativa.</p></div><button class="text-btn" id="refresh">Actualizar</button></div>
+          <div class="preview-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>NM$</th><th>A2</th><th>Kappa</th><th>Actualizado</th></tr></thead><tbody id="existingRows"><tr><td colspan="6" class="empty">Sin datos.</td></tr></tbody></table></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <footer>Genética Universal × GONVAX · Administración de datos genómicos</footer>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="admin.js" defer></script>
+</body>
+</html>

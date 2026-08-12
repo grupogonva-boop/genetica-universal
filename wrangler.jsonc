@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "genetica-universal-admin",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-08-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "admin.geneticauniversal.com", "custom_domain": true }
+  ],
+  "assets": {
+    "directory": "./admin",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "genetica-universal-admin", "migrations_dir": "worker/migrations" }
+  ],
+  "vars": {
+    "ADMIN_EMAIL": "richard4790.rg@gmail.com",
+    "PUBLIC_ORIGINS": "https://geneticauniversal.com,https://www.geneticauniversal.com"
+  },
+  "observability": {
+    "enabled": true,
+    "logs": { "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.05 }
+  }
+}
