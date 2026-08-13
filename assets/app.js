@@ -27,27 +27,30 @@ function renderTable(){
 function fichaDerived(t){const signed=n=>`${Number(n)>0?'+':''}${n}`,position=n=>Math.max(3,Math.min(97,50+(Number(n)||0)*18));return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,ccr:t.ccr,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),signed,traits:(t.traits||[]).map(([label,left,right,value])=>[label,left,right,position(value),value])};}
 function metricRow(label,value,highlight=''){return `<div class="bull-metric-row"><span>${label}</span><b class="${highlight}">${value}</b></div>`;}
 function openModal(t){
-  const d=fichaDerived(t),extras=Object.entries(t.genomic_data||{}).slice(0,24);
-  document.getElementById('fichaContent').innerHTML=`<div class="ficha-shell bull-sheet">
-    <div class="bull-sheet-scroll">
-      <header class="bull-profile">
-        <button class="ficha-photo bull-profile-photo" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="ficha-head-img" src="${t.foto}" alt="${t.nombre}"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4M8 10.5h5M10.5 8v5"/></svg></span></button>
-        <div class="bull-profile-copy"><div class="ficha-overline">FICHA GENÓMICA 360° · HOLSTEIN · 08/2026</div><h2 id="fichaTitle">${t.nombre}</h2><p class="bull-registered">${t.codigo} · Genómico · ${d.reliability}% confiabilidad</p><div class="bull-pedigree"><small>PEDIGRÍ</small><strong>${t.ped}</strong></div><div class="ficha-highlights"><span class="gbadge ${t.beta==='A2/A2'?'on':''}">Beta caseína ${t.beta}</span><span class="gbadge ${t.kappa==='BB'?'on':''}">Kappa caseína ${t.kappa}</span>${isQ(t)?'<span class="gbadge premium">★ Perfil quesero</span>':''}<span class="gbadge availability-badge">${availability(t.disponibilidad).label}</span></div></div>
-      </header>
-      <section class="bull-index-band" aria-label="Índices principales"><div><small>GTPI</small><strong>${d.tpi}</strong></div><div><small>NM$</small><strong>+${t.nm}</strong></div><div><small>CM$</small><strong>+${t.cm}</strong></div><div><small>Leche</small><strong>+${t.milk}</strong><em>lb</em></div><div><small>CFP</small><strong>+${d.cfp}</strong><em>lb</em></div></section>
-      <div class="bull-sheet-content">
-        <div class="bull-section-heading"><span>01</span><div><small>Evaluación genética</small><h3>Producción, salud y fertilidad</h3></div><p>Lectura compacta en el formato que usan los catálogos ganaderos.</p></div>
-        <div class="bull-data-grid">
-          <article class="bull-data-card"><h4>Producción</h4>${metricRow('Leche PTA',`+${t.milk} lb`,'hot')}${metricRow('Grasa',`+${t.fat} lb`)}${metricRow('Grasa %',`${d.signed(d.fatPct)}%`)}${metricRow('Proteína',`+${d.protein} lb`)}${metricRow('Proteína %',`${d.signed(d.proteinPct)}%`)}</article>
-          <article class="bull-data-card"><h4>Mérito económico</h4>${metricRow('NM$ — Mérito neto',`+${t.nm}`,'hot')}${metricRow('CM$ — Mérito quesero',`+${t.cm}`)}${metricRow('CFP',`+${d.cfp} lb`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Vida productiva',`+${d.pl} meses`)}</article>
-          <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('DPR — Preñez hijas',d.signed(d.dpr),'hot')}${metricRow('CCR — Concepción vacas',d.signed(d.ccr))}${metricRow('Índice de fertilidad',d.signed(d.fertIndex))}${metricRow('SCS — Células somáticas',d.scs)}${metricRow('Mastitis',d.signed(d.mastitis))}${metricRow('Viabilidad',d.signed(d.livability))}</article>
+  const d=fichaDerived(t);
+  document.getElementById('fichaContent').innerHTML=`<div class="ficha-shell bull-sheet catalog-sheet">
+    <div class="bull-sheet-scroll catalog-sheet-scroll">
+      <header class="catalog-titlebar"><div><small>FICHA GENÓMICA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombre}</h2></div><div class="catalog-title-id"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small></div></header>
+      <div class="catalog-overview">
+        <div class="catalog-facts">
+          <section class="bull-index-band catalog-index" aria-label="Índices principales"><div><small>GTPI</small><strong>${d.tpi}</strong></div><div><small>NM$</small><strong>+${t.nm}</strong></div><div><small>CM$</small><strong>+${t.cm}</strong></div><div><small>Leche</small><strong>+${t.milk}</strong><em>lb</em></div><div><small>CFP</small><strong>+${d.cfp}</strong><em>lb</em></div></section>
+          <div class="catalog-data-grid">
+            <article class="bull-data-card"><h4>Producción</h4>${metricRow('Leche PTA',`+${t.milk} lb`,'hot')}${metricRow('Grasa',`+${t.fat} lb`)}${metricRow('Grasa %',`${d.signed(d.fatPct)}%`)}${metricRow('Proteína',`+${d.protein} lb`)}${metricRow('Proteína %',`${d.signed(d.proteinPct)}%`)}</article>
+            <article class="bull-data-card"><h4>Economía</h4>${metricRow('NM$',`+${t.nm}`,'hot')}${metricRow('CM$',`+${t.cm}`)}${metricRow('CFP',`+${d.cfp} lb`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Vida productiva',`${d.signed(d.pl)} meses`)}</article>
+            <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('DPR',d.signed(d.dpr),'hot')}${metricRow('CCR',d.signed(d.ccr))}${metricRow('Índice fertilidad',d.signed(d.fertIndex))}${metricRow('SCS',d.scs)}${metricRow('Mastitis',d.signed(d.mastitis))}</article>
+          </div>
         </div>
-        <div class="bull-section-heading"><span>02</span><div><small>Tipo lineal</small><h3>Conformación funcional</h3></div><p>El punto indica la transmisión esperada entre ambos extremos.</p></div>
-        <article class="bull-type-card"><div class="bull-type-summary"><div><small>PTAT</small><strong>${d.signed(d.ptat)}</strong></div><div><small>UDC</small><strong>${d.signed(d.udc)}</strong></div><div><small>Compuesto patas</small><strong>${d.signed(d.flc)}</strong></div></div><div class="bull-linear-list">${d.traits.map(([label,left,right,pos,value])=>`<div class="bull-linear"><div class="bull-linear-name"><span>${label}</span><b>${d.signed(value)}</b></div><div class="bull-linear-scale"><i style="--pos:${pos}%"></i></div><div class="bull-linear-ends"><small>${left}</small><small>${right}</small></div></div>`).join('')}</div></article>
-        <div class="bull-section-heading"><span>03</span><div><small>Identificación</small><h3>Expediente y caseínas</h3></div></div>
-        <div class="bull-record-grid"><div><small>Nombre comercial</small><strong>${t.nombre}</strong></div><div><small>Código NAAB</small><strong>${t.codigo}</strong></div><div><small>Registro</small><strong>${t.reg}</strong></div><div><small>Fecha de nacimiento</small><strong>${t.dob}</strong></div><div><small>Raza</small><strong>Holstein</strong></div><div><small>Beta caseína</small><strong>${t.beta}</strong></div><div><small>Kappa caseína</small><strong>${t.kappa}</strong></div><div><small>Presentación disponible</small><strong>${availability(t.disponibilidad).label}</strong></div>${extras.map(([key,value])=>`<div><small>${key}</small><strong>${value}</strong></div>`).join('')}</div>
-        <p class="bull-demo-note">Evaluación oficial del catálogo Genética Universal 08/2026. Consulta disponibilidad y condiciones comerciales vigentes con un asesor.</p>
+        <aside class="catalog-identity">
+          <button class="ficha-photo bull-profile-photo" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="ficha-head-img" src="${t.foto}" alt="${t.nombre}"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4M8 10.5h5M10.5 8v5"/></svg></span></button>
+          <div class="catalog-pedigree"><small>PEDIGRÍ</small><strong>${t.ped}</strong></div>
+          <div class="ficha-highlights"><span class="gbadge ${t.beta==='A2/A2'?'on':''}">Beta ${t.beta}</span><span class="gbadge ${t.kappa==='BB'?'on':''}">Kappa ${t.kappa}</span>${isQ(t)?'<span class="gbadge premium">★ Quesero</span>':''}</div>
+        </aside>
       </div>
+      <section class="catalog-type-zone">
+        <div class="catalog-section-title"><div><small>TIPO LINEAL</small><h3>Conformación funcional</h3></div><div class="catalog-type-summary"><span>PTAT <b>${d.signed(d.ptat)}</b></span><span>UDC <b>${d.signed(d.udc)}</b></span><span>FLC <b>${d.signed(d.flc)}</b></span></div></div>
+        <div class="bull-linear-list">${d.traits.map(([label,left,right,pos,value])=>`<div class="bull-linear"><div class="bull-linear-name"><span>${label}</span><b>${d.signed(value)}</b></div><div class="bull-linear-scale"><i style="--pos:${pos}%"></i></div><div class="bull-linear-ends"><small>${left}</small><small>${right}</small></div></div>`).join('')}</div>
+      </section>
+      <section class="catalog-record"><div><small>REGISTRO</small><b>${t.reg}</b></div><div><small>NACIMIENTO</small><b>${t.dob}</b></div><div><small>RAZA</small><b>Holstein</b></div><div><small>PRESENTACIÓN</small><b>${availability(t.disponibilidad).label}</b></div><p>Evaluación oficial 08/2026 · Confirma existencias con un asesor.</p></section>
     </div>
     <footer class="bull-sheet-actions"><span><b>${t.nombre}</b><small>${t.codigo}</small></span><button class="ficha-quote" type="button"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#whatsappIcon"/></svg>Solicitar información por WhatsApp</button></footer>
   </div>`;
