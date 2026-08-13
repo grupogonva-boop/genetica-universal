@@ -143,24 +143,54 @@
             <th><button class="sort-btn" data-sort="nombre">Semental <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="codigo">Código <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="disponibilidad">Presentación <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="tpi">TPI <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="nm">NM$ <span>↕</span></button></th>
-            <th><button class="sort-btn" data-sort="cm">CM$ <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="milk">Leche <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="cfp">CFP <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="fat">Grasa <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="fatPct">% Grasa <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="protein">PRO <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="proteinPct">%P <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="sce">SCE <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="scs">SCS <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="pl">PL <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="dpr">DPR <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="ccr">CCR <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="ptat">PTAT <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="udc">UDC <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="flc">FLC <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="sta">STA <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="beta">Beta <span>↕</span></button></th>
             <th><button class="sort-btn" data-sort="kappa">Kappa <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="damName">DM <span>↕</span></button></th>
+            <th><button class="sort-btn" data-sort="sireName">SIRE <span>↕</span></button></th>
             <th aria-label="Abrir ficha"></th>
           </tr>
           <tr class="column-filters">
             <th><input data-col="nombre" aria-label="Filtrar por nombre" placeholder="Filtrar…"></th>
             <th><input data-col="codigo" aria-label="Filtrar por código" placeholder="Código…"></th>
             <th><select data-col="disponibilidad" aria-label="Filtrar por presentación"><option value="">Todas</option><option value="sex">Sexado</option><option value="conv">Convencional</option><option value="conv-sex">Sexado + Convencional</option><option value="s-conv">Súper convencional</option></select></th>
+            <th><input data-col="tpi" type="number" aria-label="TPI mínimo" placeholder="Mín."></th>
             <th><input data-col="nm" type="number" aria-label="NM mínimo" placeholder="Mín."></th>
-            <th><input data-col="cm" type="number" aria-label="CM mínimo" placeholder="Mín."></th>
             <th><input data-col="milk" type="number" aria-label="Leche mínima" placeholder="Mín."></th>
+            <th><input data-col="cfp" type="number" aria-label="CFP mínimo" placeholder="Mín."></th>
             <th><input data-col="fat" type="number" aria-label="Grasa mínima" placeholder="Mín."></th>
+            <th><input data-col="fatPct" type="number" step="0.01" aria-label="% Grasa mínimo" placeholder="Mín."></th>
+            <th><input data-col="protein" type="number" aria-label="Proteína mínima" placeholder="Mín."></th>
+            <th><input data-col="proteinPct" type="number" step="0.01" aria-label="%P mínimo" placeholder="Mín."></th>
+            <th><input data-col="sce" type="number" step="0.1" aria-label="SCE mínimo" placeholder="Mín."></th>
+            <th><input data-col="scs" type="number" step="0.01" aria-label="SCS mínimo" placeholder="Mín."></th>
+            <th><input data-col="pl" type="number" step="0.1" aria-label="PL mínimo" placeholder="Mín."></th>
+            <th><input data-col="dpr" type="number" step="0.1" aria-label="DPR mínimo" placeholder="Mín."></th>
+            <th><input data-col="ccr" type="number" step="0.1" aria-label="CCR mínimo" placeholder="Mín."></th>
+            <th><input data-col="ptat" type="number" step="0.01" aria-label="PTAT mínimo" placeholder="Mín."></th>
+            <th><input data-col="udc" type="number" step="0.01" aria-label="UDC mínimo" placeholder="Mín."></th>
+            <th><input data-col="flc" type="number" step="0.01" aria-label="FLC mínimo" placeholder="Mín."></th>
+            <th><input data-col="sta" type="number" step="0.01" aria-label="STA mínimo" placeholder="Mín."></th>
             <th><select data-col="beta" aria-label="Filtrar beta caseína"><option value="">Todas</option><option>A2/A2</option><option>A1/A2</option><option>A1/A1</option></select></th>
             <th><select data-col="kappa" aria-label="Filtrar kappa caseína"><option value="">Todas</option><option>BB</option><option>AB</option><option>AA</option><option>AE</option><option>BE</option></select></th>
+            <th><input data-col="damName" aria-label="Filtrar por madre" placeholder="Madre…"></th>
+            <th><input data-col="sireName" aria-label="Filtrar por padre" placeholder="Padre…"></th>
             <th></th>
           </tr>
         </thead>

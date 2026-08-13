@@ -5,12 +5,14 @@ const waLink=(m)=>`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(m)
 const isQ=(t)=>t.beta==="A2/A2"&&t.kappa==="BB";
 const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',short:'CONV'},'conv-sex':{label:'Sexado + Convencional',short:'SEX + CONV'},'s-conv':{label:'Súper convencional',short:'S-CONV'}};
 const availability=(key)=>AVAILABILITY[key]||{label:'Consultar',short:'CONSULTAR'};
+const signed=n=>`${Number(n)>0?'+':''}${n}`;
+const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','sta'];
 function pass(t){
   if(activeF==="a2"&&t.beta!=="A2/A2")return false;
   if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
   if(activeF==="conv"&&!['conv','conv-sex','s-conv'].includes(t.disponibilidad))return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
-  for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(['nm','cm','milk','fat'].includes(key)){if(t[key]<Number(value))return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
+  for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(NUMERIC_COLS.includes(key)){if(t[key]<Number(value))return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
   return true;
 }
 function renderTable(){
@@ -18,15 +20,37 @@ function renderTable(){
   const list=TOROS.filter(pass).sort((a,b)=>{if(!sortKey)return 0;const av=a[sortKey],bv=b[sortKey];return (typeof av==='number'?av-bv:String(av).localeCompare(String(bv),'es'))*sortDir;});
   document.getElementById('tableCount').textContent=`${list.length} ${list.length===1?'semental':'sementales'}`;
   document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===sortKey;btn.classList.toggle('active',active);btn.querySelector('span').textContent=active?(sortDir===1?'↑':'↓'):'↕';});
-  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="10">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="25">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
   tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
     <td><div class="sire-id"><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>Holstein · Genómico</small></div></div></td>
-    <td class="metric">${t.codigo}</td><td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td><td class="metric-hi">+${t.nm}</td><td class="metric">+${t.cm}</td><td class="metric">+${t.milk} lb</td><td class="metric">+${t.fat}</td>
-    <td><span class="table-pill ${t.beta==='A2/A2'?'hot':''}">${t.beta}</span></td><td><span class="table-pill ${t.kappa==='BB'?'hot':''}">${t.kappa}</span></td><td><span class="row-open">›</span></td>
+    <td class="metric">${t.codigo}</td>
+    <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
+    <td class="metric">${t.tpi}</td>
+    <td class="metric-hi">+${t.nm}</td>
+    <td class="metric">+${t.milk} lb</td>
+    <td class="metric">+${t.cfp}</td>
+    <td class="metric">+${t.fat}</td>
+    <td class="metric">${signed(Number(t.fatPct).toFixed(2))}%</td>
+    <td class="metric">+${t.protein}</td>
+    <td class="metric">${signed(Number(t.proteinPct).toFixed(2))}%</td>
+    <td class="metric">${signed(t.sce)}</td>
+    <td class="metric">${t.scs}</td>
+    <td class="metric">${signed(t.pl)}</td>
+    <td class="metric">${signed(t.dpr)}</td>
+    <td class="metric">${signed(t.ccr)}</td>
+    <td class="metric">${signed(Number(t.ptat).toFixed(2))}</td>
+    <td class="metric">${signed(Number(t.udc).toFixed(2))}</td>
+    <td class="metric">${signed(Number(t.flc).toFixed(2))}</td>
+    <td class="metric">${signed(Number(t.sta).toFixed(2))}</td>
+    <td><span class="table-pill ${t.beta==='A2/A2'?'hot':''}">${t.beta}</span></td>
+    <td><span class="table-pill ${t.kappa==='BB'?'hot':''}">${t.kappa}</span></td>
+    <td class="table-name-cell">${t.damName}</td>
+    <td class="table-name-cell">${t.sireName}</td>
+    <td><span class="row-open">›</span></td>
   </tr>`).join('');
   tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
 }
-function fichaDerived(t){const signed=n=>`${Number(n)>0?'+':''}${n}`,source=window.LINEAR_TRAITS?.[t.codigo]||t.traits||[];return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,feedSaved:t.feedSaved,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),signed,traits:source.map(([label,value,left,right,descriptor])=>({label,value,left,right,descriptor,size:Math.min(Math.abs(Number(value))/2*50,50),direction:Number(value)>=0?'positive':'negative'}))};}
+function fichaDerived(t){const source=window.LINEAR_TRAITS?.[t.codigo]||t.traits||[];return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,feedSaved:t.feedSaved,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),signed,traits:source.map(([label,value,left,right,descriptor])=>({label,value,left,right,descriptor,size:Math.min(Math.abs(Number(value))/2*50,50),direction:Number(value)>=0?'positive':'negative'}))};}
 function metricRow(label,value,highlight=''){return `<div class="bull-metric-row"><span>${label}</span><b class="${highlight}">${value}</b></div>`;}
 function openModal(t){
   const d=fichaDerived(t),extended=t.nombreRegistrado?`<section class="catalog-family-record"><div><small>NOMBRE REGISTRADO</small><b>${t.nombreRegistrado}</b></div><div><small>aAa</small><b>${t.aaa}</b></div><div><small>HAPLOTIPO</small><b>${t.haplotipos}</b></div><div><small>MADRE</small><b>${t.dam}</b></div><div><small>ABUELA MATERNA</small><b>${t.mgd}</b></div><a href="${t.sourceUrl}" target="_blank" rel="noopener noreferrer">Ver perfil complementario en AI-Total ↗</a></section>`:'';
