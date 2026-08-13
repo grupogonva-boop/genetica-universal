@@ -6,7 +6,9 @@ const isQ=(t)=>t.beta==="A2/A2"&&t.kappa==="BB";
 const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',short:'CONV'},'conv-sex':{label:'Sexado + Convencional',short:'SEX + CONV'},'s-conv':{label:'Súper convencional',short:'S-CONV'}};
 const availability=(key)=>AVAILABILITY[key]||{label:'Consultar',short:'CONSULTAR'};
 function pass(t){
-  if(activeF==="a2"&&t.beta!=="A2/A2")return false;if(activeF==="bb"&&t.kappa!=="BB")return false;if(activeF==="ques"&&!isQ(t))return false;
+  if(activeF==="a2"&&t.beta!=="A2/A2")return false;
+  if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
+  if(activeF==="conv"&&!['conv','conv-sex','s-conv'].includes(t.disponibilidad))return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
   for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(['nm','cm','milk','fat'].includes(key)){if(t[key]<Number(value))return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
   return true;
@@ -24,10 +26,10 @@ function renderTable(){
   </tr>`).join('');
   tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
 }
-function fichaDerived(t){const signed=n=>`${Number(n)>0?'+':''}${n}`,position=n=>Math.max(3,Math.min(97,50+(Number(n)||0)*18));return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,ccr:t.ccr,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),signed,traits:(t.traits||[]).map(([label,left,right,value])=>[label,left,right,position(value),value])};}
+function fichaDerived(t){const signed=n=>`${Number(n)>0?'+':''}${n}`,source=window.LINEAR_TRAITS?.[t.codigo]||t.traits||[];return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,ccr:t.ccr,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),signed,traits:source.map(([label,value,left,right,descriptor])=>({label,value,left,right,descriptor,size:Math.min(Math.abs(Number(value))/2*50,50),direction:Number(value)>=0?'positive':'negative'}))};}
 function metricRow(label,value,highlight=''){return `<div class="bull-metric-row"><span>${label}</span><b class="${highlight}">${value}</b></div>`;}
 function openModal(t){
-  const d=fichaDerived(t);
+  const d=fichaDerived(t),extended=t.nombreRegistrado?`<section class="catalog-family-record"><div><small>NOMBRE REGISTRADO</small><b>${t.nombreRegistrado}</b></div><div><small>aAa</small><b>${t.aaa}</b></div><div><small>HAPLOTIPO</small><b>${t.haplotipos}</b></div><div><small>MADRE</small><b>${t.dam}</b></div><div><small>ABUELA MATERNA</small><b>${t.mgd}</b></div><a href="${t.sourceUrl}" target="_blank" rel="noopener noreferrer">Ver perfil complementario en AI-Total ↗</a></section>`:'';
   document.getElementById('fichaContent').innerHTML=`<div class="ficha-shell bull-sheet catalog-sheet">
     <div class="bull-sheet-scroll catalog-sheet-scroll">
       <header class="catalog-titlebar"><div><small>FICHA GENÓMICA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombre}</h2></div><div class="catalog-title-id"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small></div></header>
@@ -46,11 +48,12 @@ function openModal(t){
           <div class="ficha-highlights"><span class="gbadge ${t.beta==='A2/A2'?'on':''}">Beta ${t.beta}</span><span class="gbadge ${t.kappa==='BB'?'on':''}">Kappa ${t.kappa}</span>${isQ(t)?'<span class="gbadge premium">★ Quesero</span>':''}</div>
         </aside>
       </div>
-      <section class="catalog-type-zone">
-        <div class="catalog-section-title"><div><small>TIPO LINEAL</small><h3>Conformación funcional</h3></div><div class="catalog-type-summary"><span>PTAT <b>${d.signed(d.ptat)}</b></span><span>UDC <b>${d.signed(d.udc)}</b></span><span>FLC <b>${d.signed(d.flc)}</b></span></div></div>
-        <div class="bull-linear-list">${d.traits.map(([label,left,right,pos,value])=>`<div class="bull-linear"><div class="bull-linear-name"><span>${label}</span><b>${d.signed(value)}</b></div><div class="bull-linear-scale"><i style="--pos:${pos}%"></i></div><div class="bull-linear-ends"><small>${left}</small><small>${right}</small></div></div>`).join('')}</div>
+      <section class="catalog-type-zone full-linear-zone">
+        <div class="catalog-section-title"><div><small>MORFOLOGÍA COMPLETA · 18 RASGOS</small><h3>Conformación funcional</h3></div><div class="catalog-type-summary"><span>PTAT <b>${d.signed(d.ptat)}</b></span><span>UDC <b>${d.signed(d.udc)}</b></span><span>FLC <b>${d.signed(d.flc)}</b></span></div></div>
+        <div class="linear-axis" aria-hidden="true"><span>-2</span><span>-1</span><span>0</span><span>1</span><span>2</span></div>
+        <div class="full-linear-list">${d.traits.map(trait=>`<div class="linear-catalog-row"><strong>${trait.label}</strong><div class="linear-catalog-chart" title="${trait.left} a ${trait.right}"><i class="${trait.direction}" style="--size:${trait.size}%"></i></div><b>${d.signed(trait.value)}</b><span>${trait.descriptor}</span></div>`).join('')}</div>
       </section>
-      <section class="catalog-record"><div><small>REGISTRO</small><b>${t.reg}</b></div><div><small>NACIMIENTO</small><b>${t.dob}</b></div><div><small>RAZA</small><b>Holstein</b></div><div><small>PRESENTACIÓN</small><b>${availability(t.disponibilidad).label}</b></div><p>Evaluación oficial 08/2026 · Confirma existencias con un asesor.</p></section>
+      <section class="catalog-record"><div><small>REGISTRO</small><b>${t.reg}</b></div><div><small>NACIMIENTO</small><b>${t.dob}</b></div><div><small>RAZA</small><b>Holstein</b></div><div><small>PRESENTACIÓN</small><b>${availability(t.disponibilidad).label}</b></div><p>Evaluación oficial 08/2026 · Confirma existencias con un asesor.</p></section>${extended}
     </div>
     <footer class="bull-sheet-actions"><span><b>${t.nombre}</b><small>${t.codigo}</small></span><button class="ficha-quote" type="button"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#whatsappIcon"/></svg>Solicitar información por WhatsApp</button></footer>
   </div>`;
@@ -65,11 +68,11 @@ document.getElementById('modalBack').addEventListener('click',e=>{if(e.target.id
 document.getElementById('imageViewerClose').addEventListener('click',closeBullImage);
 document.getElementById('imageViewer').addEventListener('click',e=>{if(e.target.id==='imageViewer')closeBullImage();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!closeBullImage())closeModal();});
-document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');activeF=b.dataset.f;renderTable();});
+document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');const mode=b.dataset.f;if(mode==='tpi'||mode==='nm'){activeF='all';sortKey=mode;sortDir=-1;}else{activeF=mode;sortKey=null;sortDir=1;}renderTable();});
 document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value;renderTable();});
 document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=['nombre','codigo','beta','kappa','disponibilidad'].includes(key)?1:-1;}renderTable();}));
 document.querySelectorAll('.column-filters input,.column-filters select').forEach(input=>input.addEventListener('input',()=>{columnFilters[input.dataset.col]=input.value.trim();renderTable();}));
-document.getElementById('clearFilters').addEventListener('click',()=>{activeF='all';searchTerm='';columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach((chip,i)=>chip.classList.toggle('active',i===0));renderTable();});
+document.getElementById('clearFilters').addEventListener('click',()=>{activeF='all';searchTerm='';sortKey=null;sortDir=1;columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach((chip,i)=>chip.classList.toggle('active',i===0));renderTable();});
 document.getElementById('navToggle').addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('show'));
 document.getElementById('themeToggle').addEventListener('click',()=>{const r=document.documentElement;const dark=r.getAttribute('data-theme')==='dark';if(dark){r.removeAttribute('data-theme');}else{r.setAttribute('data-theme','dark');}try{localStorage.setItem('gu-theme',dark?'light':'dark');}catch(e){}});
 document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>document.getElementById('navLinks').classList.remove('show')));
