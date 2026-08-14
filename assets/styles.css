@@ -317,7 +317,9 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
 .ficha-download:hover{background:var(--bg-warm);transform:translateY(-2px)}
 
 /* Descarga en PDF de la ficha 360 vía impresión del navegador */
+.ficha-print-header{display:none}
 @media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
   body>*:not(#modalBack){display:none!important}
   #modalBack{position:static;display:block;background:none;backdrop-filter:none;padding:0;opacity:1}
   #modal{position:static;width:auto;max-width:none;height:auto;max-height:none;overflow:visible;box-shadow:none;transform:none;border-radius:0}
@@ -325,5 +327,10 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
   #modalClose,.bull-sheet-actions{display:none!important}
   .bull-data-card,.linear-catalog-row,.catalog-record,.bull-index-band,.catalog-family-record{break-inside:avoid}
   .catalog-data-grid{break-inside:avoid}
+  .ficha-print-header{display:flex;align-items:center;gap:11px;padding:14px 20px;background:linear-gradient(115deg,var(--red-deep),var(--red))}
+  .ficha-print-header img{width:32px;height:32px}
+  .ficha-print-header span{color:#fff;font:800 1.15rem 'Inter',sans-serif;letter-spacing:-.01em}
+  .catalog-titlebar{background:linear-gradient(115deg,var(--red-deep),var(--red))!important;border-bottom:5px solid var(--ink)}
+  .bull-data-card h4{background:linear-gradient(115deg,var(--red-deep),var(--red))!important;color:#fff!important}
 }
 @media(max-width:680px){.catalog-family-record{grid-template-columns:repeat(2,1fr)}.catalog-family-record>div:nth-child(5){grid-column:1/-1}}
