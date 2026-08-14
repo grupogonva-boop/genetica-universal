@@ -1,4 +1,4 @@
-const CONFIG={whatsapp:"524491793772",catalogoUrl:"catalogo-genetica-universal.pdf",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
+const CONFIG={whatsapp:"524491793772",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
 let TOROS=Array.isArray(window.SIRE_CATALOG)?window.SIRE_CATALOG:[];
 let activeF="all",searchTerm="",sortKey=null,sortDir=1,columnFilters={},fichaStep=0,imageViewerTrigger=null;
 const waLink=(m)=>`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(m)}`;
@@ -79,11 +79,11 @@ function openModal(t){
       </section>
       <section class="catalog-record"><div><small>REGISTRO</small><b>${t.reg}</b></div><div><small>NACIMIENTO</small><b>${t.dob}</b></div><div><small>RAZA</small><b>Holstein</b></div><div><small>PRESENTACIÓN</small><b>${availability(t.disponibilidad).label}</b></div><p>Evaluación oficial 08/2026 · Confirma existencias con un asesor.</p></section>${extended}
     </div>
-    <footer class="bull-sheet-actions"><span><b>${t.nombre}</b><small>${t.codigo}</small></span><button class="ficha-quote" type="button"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#whatsappIcon"/></svg>Solicitar información por WhatsApp</button></footer>
+    <footer class="bull-sheet-actions"><span><b>${t.nombre}</b><small>${t.codigo}</small></span><div class="bull-sheet-actions-btns"><button class="ficha-download" type="button"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</button><button class="ficha-quote" type="button"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#whatsappIcon"/></svg>Solicitar información por WhatsApp</button></div></footer>
   </div>`;
   document.getElementById('fichaContent').dataset.toro=TOROS.indexOf(t);document.getElementById('fichaContent').addEventListener('click',handleFichaClick);document.getElementById('modalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('modalClose').focus();
 }
-function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(photo){openBullImage(TOROS[Number(document.getElementById('fichaContent').dataset.toro)],photo);return;}if(e.target.closest('.ficha-quote')){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];window.open(waLink(CONFIG.msgToro(t)),'_blank','noopener');}}
+function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(photo){openBullImage(TOROS[Number(document.getElementById('fichaContent').dataset.toro)],photo);return;}if(e.target.closest('.ficha-quote')){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];window.open(waLink(CONFIG.msgToro(t)),'_blank','noopener');return;}if(e.target.closest('.ficha-download'))window.print();}
 function openBullImage(t,trigger){const viewer=document.getElementById('imageViewer'),img=document.getElementById('imageViewerImg');imageViewerTrigger=trigger||document.activeElement;img.src=t.foto;img.alt=`Fotografía ampliada de ${t.nombre}`;document.getElementById('imageViewerTitle').textContent=`${t.nombre} · ${t.codigo}`;viewer.classList.add('open');viewer.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';document.getElementById('imageViewerClose').focus();}
 function closeBullImage(){const viewer=document.getElementById('imageViewer');if(!viewer.classList.contains('open'))return false;viewer.classList.remove('open');viewer.setAttribute('aria-hidden','true');if(!document.getElementById('modalBack').classList.contains('open'))document.body.style.overflow='';imageViewerTrigger?.focus();imageViewerTrigger=null;return true;}
 function closeModal(){closeBullImage();document.getElementById('modalBack').classList.remove('open');document.body.style.overflow='';}
@@ -91,7 +91,12 @@ document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('modalBack').addEventListener('click',e=>{if(e.target.id==='modalBack')closeModal();});
 document.getElementById('imageViewerClose').addEventListener('click',closeBullImage);
 document.getElementById('imageViewer').addEventListener('click',e=>{if(e.target.id==='imageViewer')closeBullImage();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!closeBullImage())closeModal();});
+function openCatalogModal(){document.getElementById('catalogModalSlot').appendChild(document.getElementById('catalogInteractive'));document.getElementById('catalogModalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('catalogModalClose').focus();}
+function closeCatalogModal(){const back=document.getElementById('catalogModalBack');if(!back.classList.contains('open'))return false;const anchor=document.getElementById('catalogHomeAnchor');anchor.parentNode.insertBefore(document.getElementById('catalogInteractive'),anchor);back.classList.remove('open');if(!document.getElementById('modalBack').classList.contains('open')&&!document.getElementById('imageViewer').classList.contains('open'))document.body.style.overflow='';return true;}
+document.getElementById('openCatalogModal').addEventListener('click',openCatalogModal);
+document.getElementById('catalogModalClose').addEventListener('click',closeCatalogModal);
+document.getElementById('catalogModalBack').addEventListener('click',e=>{if(e.target.id==='catalogModalBack')closeCatalogModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(closeBullImage())return;if(closeCatalogModal())return;closeModal();}});
 document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');const mode=b.dataset.f;if(mode==='tpi'||mode==='nm'){activeF='all';sortKey=mode;sortDir=-1;}else{activeF=mode;sortKey=null;sortDir=1;}renderTable();});
 document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value;renderTable();});
 document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=['nombre','codigo','beta','kappa','disponibilidad'].includes(key)?1:-1;}renderTable();}));
@@ -102,7 +107,6 @@ document.getElementById('themeToggle').addEventListener('click',()=>{const r=doc
 document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>document.getElementById('navLinks').classList.remove('show')));
 document.querySelectorAll('.wa-link').forEach(a=>{a.href=waLink(CONFIG.msgGeneral);a.target="_blank";a.rel="noopener noreferrer";});
 document.querySelectorAll('.wa-genomic').forEach(a=>{a.href=waLink('Hola Genética Universal, me interesa conocer el mapeo genómico por pruebas de ADN para mi establo.');a.target='_blank';a.rel='noopener noreferrer';});
-document.querySelectorAll('.cat-link').forEach(a=>{a.href=CONFIG.catalogoUrl;a.setAttribute('download','Catalogo-Genetica-Universal-AGOSTO-2026.pdf');});
 const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 function ac(el){const t=+el.dataset.count,d=1400,t0=performance.now(),format=new Intl.NumberFormat('es-MX');function s(n){const p=Math.min((n-t0)/d,1),e=1-Math.pow(1-p,3);el.textContent=format.format(Math.round(t*e));if(p<1)requestAnimationFrame(s);}requestAnimationFrame(s);}

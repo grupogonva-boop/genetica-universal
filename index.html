@@ -22,7 +22,6 @@
     <a href="#top" class="brand"><img src="assets/media/asset-01-a51888de9c.png" alt="Genética Universal"><img class="brand-word" src="assets/media/asset-02-19573668be.png" alt="Genética Universal"></a>
     <div class="nav-links" id="navLinks">
       <a href="#control-establo">Control Establo</a><a href="#catalogo">Sementales</a><a href="#trayectoria">Trayectoria</a><a href="#contacto">Contacto</a>
-      <a href="#" class="nav-download cat-link"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar catálogo</a>
       <a href="#contacto" class="nav-cta"><svg class="whatsapp-icon" width="16" aria-hidden="true"><use href="#whatsappIcon"/></svg>WhatsApp</a>
     </div>
     <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" title="Claro / Oscuro">
@@ -39,15 +38,9 @@
       <div class="kicker reveal"><span class="dot"></span>Sementales de élite</div>
       <h1 class="reveal slogan"><span class="accent gradient">Calidad</span> que se <span class="accent">Hereda</span>,<br><span class="accent gradient">Servicio</span> que <span class="accent">Acompaña</span></h1>
       <p class="reveal">Catálogo de sementales Holstein seleccionados por mérito real. Explóralos, revisa su ficha y contáctanos para llevar la mejor genética a tu rancho.</p>
-      <div class="hero-ctas reveal">
-        <a href="#catalogo" class="btn btn-primary"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>Ver catálogo</a>
-        <a href="#contacto" class="btn btn-ghost"><svg class="whatsapp-icon" width="18" aria-hidden="true"><use href="#whatsappIcon"/></svg>Contactar</a>
-        <a href="#" class="btn btn-ghost cat-link"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar catálogo</a>
-      </div>
-      <div class="hero-stats reveal">
-        <div><div class="n" data-count="48">0</div><div class="l">Sementales</div></div>
-        <div><div class="n" data-count="120">0</div><div class="l">Ranchos atendidos</div></div>
-        <div><div class="n" data-count="20">0</div><div class="l">Más de 20 años</div></div>
+      <div class="hero-mission reveal">
+        <h2>Genética de calidad para ganaderos lecheros</h2>
+        <p>Más de 20 años acompañando a productores lecheros del Bajío con genética Holstein de alto mérito. Resultados comprobados: más leche, mejor fertilidad y animales más sanos. Ganaderos de toda la región confían en nosotros año tras año.</p>
       </div>
     </div>
     <div class="hero-feature reveal">
@@ -123,7 +116,8 @@
 
 <section id="catalogo">
   <div class="wrap">
-    <div class="sec-head reveal"><div class="sec-kicker">Catálogo registrado</div><h2>Sementales, sin datos escondidos</h2><p>Compara el catálogo completo, ordena cada indicador y abre la ficha genómica 360° de cualquier toro.</p></div>
+    <div class="sec-head reveal"><div class="sec-kicker">Catálogo registrado</div><h2>Catálogo completo y verificado</h2><p>Compara el catálogo completo, ordena cada indicador y abre la ficha genómica 360° de cualquier toro.</p></div>
+    <div id="catalogInteractive">
     <div class="catalog-tools reveal">
       <div class="search"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="searchInput" placeholder="Buscar por nombre o código..."></div>
       <div class="chips" id="chips">
@@ -197,7 +191,13 @@
         <tbody id="sireRows"></tbody>
       </table>
     </div>
+    </div>
+    <span id="catalogHomeAnchor" hidden></span>
     <p class="demo-note">◆ Evaluaciones y fotografías disponibles tomadas del catálogo Genética Universal 08/2026. La disponibilidad comercial puede cambiar; confirma existencias con un asesor.</p>
+    <div class="catalog-bottom-ctas reveal">
+      <button type="button" class="btn btn-primary" id="openCatalogModal"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>Ver catálogo</button>
+      <a href="#contacto" class="btn btn-ghost"><svg class="whatsapp-icon" width="18" aria-hidden="true"><use href="#whatsappIcon"/></svg>Contactar</a>
+    </div>
   </div>
 </section>
 
@@ -307,6 +307,14 @@
   <div class="modal ficha-modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="fichaTitle">
     <button class="modal-close" id="modalClose" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div id="fichaContent"></div>
+  </div>
+</div>
+
+<div class="modal-back" id="catalogModalBack">
+  <div class="catalog-popup-modal" role="dialog" aria-modal="true" aria-labelledby="catalogModalTitle">
+    <button class="modal-close" id="catalogModalClose" aria-label="Cerrar catálogo"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2 id="catalogModalTitle" class="catalog-popup-title">Catálogo completo</h2>
+    <div class="catalog-popup-body" id="catalogModalSlot"></div>
   </div>
 </div>
 
