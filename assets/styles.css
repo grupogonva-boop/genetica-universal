@@ -82,8 +82,9 @@ nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(16px) saturate(150%);b
 .hero-stats .l{font-size:.8rem;color:var(--muted);margin-top:2px}
 .hero-feature{position:relative}
 .hero-feature .poster{transform:rotate(1.4deg);box-shadow:var(--shadow-lg)}
-.hero-feature .poster.back{position:absolute;top:-20px;right:-8px;width:60%;transform:rotate(-5deg);z-index:-1;opacity:.96}
-.hero-carousel{position:relative;width:100%;aspect-ratio:3/4;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg);transform:rotate(1.2deg);background:linear-gradient(to bottom,#d3e6f2,#dbe8ea 42%,#c3d4b3 78%,#b3c7a2)}
+.hero-feature{max-width:400px;margin-left:auto}
+.hero-feature .poster.back{position:absolute;top:-20px;right:-8px;width:60%;aspect-ratio:9/16;transform:rotate(-5deg);z-index:-1;opacity:.96}
+.hero-carousel{position:relative;width:100%;aspect-ratio:9/16;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg);transform:rotate(1.2deg);background:linear-gradient(to bottom,#d3e6f2,#dbe8ea 42%,#c3d4b3 78%,#b3c7a2)}
 .hslide{position:absolute;inset:0;opacity:0;transition:opacity 1.1s ease}
 .hslide.active{opacity:1}
 .hslide>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.0);transition:transform 6s ease-out}

@@ -63,7 +63,7 @@ function openModal(t){
           <div class="catalog-data-grid">
             <article class="bull-data-card"><h4>Producción</h4>${metricRow('Leche PTA',`+${t.milk} lb`,'hot')}${metricRow('Grasa',`+${t.fat} lb`)}${metricRow('Grasa %',`${d.signed(d.fatPct)}%`)}${metricRow('Proteína',`+${d.protein} lb`)}${metricRow('Proteína %',`${d.signed(d.proteinPct)}%`)}</article>
             <article class="bull-data-card"><h4>Economía</h4>${metricRow('NM$',`+${t.nm}`,'hot')}${metricRow('CM$',`+${t.cm}`)}${metricRow('CFP',`+${d.cfp} lb`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Feed Saved',d.signed(d.feedSaved))}</article>
-            <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('Índice fertilidad',d.signed(d.fertIndex))}${metricRow('SCS',d.scs)}${metricRow('Mastitis',d.signed(d.mastitis))}${metricRow('Vida productiva',`${d.signed(d.pl)} meses`)}${metricRow('Livability',d.signed(d.livability))}${metricRow('DPR',d.signed(d.dpr),'hot')}</article>
+            <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('Vida productiva',`${d.signed(d.pl)} meses`,'hot')}${metricRow('Viabilidad',d.signed(d.livability))}${metricRow('SCS',d.scs)}${metricRow('Índice de fertilidad',d.signed(d.fertIndex))}${metricRow('Mastitis',d.signed(d.mastitis))}${metricRow('DPR',d.signed(d.dpr))}</article>
           </div>
         </div>
         <aside class="catalog-identity">
