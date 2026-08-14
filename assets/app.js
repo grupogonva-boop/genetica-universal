@@ -120,15 +120,22 @@ renderTable();
 
 /* Hero carousel of elite bulls */
 let heroTimer;
+const HERO_CAROUSEL=[
+  {foto:'assets/media/hero/dominance.jpg',nombre:'DOMINANCE'},
+  {foto:'assets/media/hero/mountie-red.jpg',nombre:'MOUNTIE-RED'},
+  {foto:'assets/media/hero/quality.jpg',nombre:'QUALITY'},
+  {foto:'assets/media/hero/sweet-dreams.jpg',nombre:'SWEET DREAMS'},
+  {foto:'assets/media/hero/brevin.jpg',nombre:'BREVIN'},
+];
 function renderHero(){
-  const HERO=TOROS.slice(0,6);
+  const HERO=HERO_CAROUSEL;
   const car=document.getElementById('heroCarousel');
   const dots=document.getElementById('heroDots');
   const back=document.getElementById('heroBack');
   if(!car) return;
-  car.innerHTML=HERO.map((t,i)=>`<div class="hslide${i===0?' active':''}"><img src="${t.foto}" alt="${t.nombre}"><span class="breed-tag">Holstein</span><span class="nm-badge">+${t.nm}<small>NM$</small></span><div class="poster-scrim"><h3>${t.nombre}</h3><div class="code">${t.codigo} · ${t.beta}</div></div></div>`).join('');
+  car.innerHTML=HERO.map((t,i)=>`<div class="hslide${i===0?' active':''}"><img src="${t.foto}" alt="${t.nombre}"></div>`).join('');
   dots.innerHTML=HERO.map((_,i)=>`<i data-i="${i}" class="${i===0?'on':''}"></i>`).join('');
-  if(back) back.innerHTML=`<img src="${(TOROS[3]||TOROS[1]).foto}" alt="">`;
+  if(back) back.innerHTML=`<img src="${HERO[2].foto}" alt="">`;
   const slides=[...car.children], dd=[...dots.children]; let hi=0;
   function go(n){slides[hi].classList.remove('active');dd[hi].classList.remove('on');hi=(n+HERO.length)%HERO.length;slides[hi].classList.add('active');dd[hi].classList.add('on');}
   function play(){clearInterval(heroTimer);heroTimer=setInterval(()=>go(hi+1),3800);}
