@@ -76,7 +76,11 @@ nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(16px) saturate(150%);b
 .btn-ghost:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 .hero-mission{margin-top:34px;padding-top:28px;border-top:1px solid var(--border-soft)}
 .hero-mission h2{font-size:clamp(1.25rem,2.1vw,1.6rem);font-weight:800;letter-spacing:-.01em;margin-bottom:11px}
+.hero-mission h2 strong,.hero-mission p strong{color:var(--red);font-weight:800}
 .hero-mission p{color:var(--muted);font-size:.92rem;line-height:1.65;max-width:520px}
+.hero-proof-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;list-style:none}
+.hero-proof-list li{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:99px;border:1px solid rgba(228,35,43,.28);background:var(--red-tint);color:var(--red);font-weight:700;font-size:.78rem}
+.hero-proof-list svg{width:14px;height:14px;flex:none}
 .hero-feature{position:relative}
 .hero-feature .poster{transform:rotate(1.4deg);box-shadow:var(--shadow-lg)}
 .hero-feature{width:100%;max-width:400px;margin-left:auto}
@@ -203,8 +207,9 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
 .catalog-popup-modal{position:relative;width:100%;max-width:min(1400px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border-radius:22px;box-shadow:var(--shadow-lg);padding:clamp(20px,3vw,34px);transform:translateY(24px) scale(.98);transition:transform .35s}
 #catalogModalBack.open .catalog-popup-modal{transform:none}
 .catalog-popup-title{padding-right:44px;font-size:clamp(1.2rem,2vw,1.5rem);margin-bottom:16px}
-.catalog-popup-body{min-height:0;flex:1;overflow:auto}
-#catalogModalSlot .sire-table-wrap{max-height:none}
+.catalog-popup-body{min-height:0;flex:1;overflow:hidden;display:flex;flex-direction:column}
+#catalogModalSlot #catalogInteractive{display:flex;flex-direction:column;min-height:0;flex:1}
+#catalogModalSlot .sire-table-wrap{flex:1;min-height:0;max-height:none;margin-bottom:0}
 @media(max-width:720px){.catalog-popup-modal{padding:16px}}
 .js .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
 .js .reveal.in{opacity:1;transform:none}
@@ -315,9 +320,11 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
 @media print{
   body *{visibility:hidden}
   #modalBack,#modalBack *{visibility:visible}
-  #modalBack{position:static;display:block;background:none;backdrop-filter:none;padding:0;opacity:1}
+  #modalBack{position:absolute;top:0;left:0;width:100%;display:block;background:none;backdrop-filter:none;padding:0;opacity:1}
   #modal{position:static;width:auto;max-width:none;height:auto;max-height:none;overflow:visible;box-shadow:none;transform:none;border-radius:0}
   .bull-sheet-scroll{overflow:visible;height:auto;max-height:none}
   #modalClose,.bull-sheet-actions{display:none!important}
+  .bull-data-card,.linear-catalog-row,.catalog-record,.bull-index-band,.catalog-family-record{break-inside:avoid}
+  .catalog-data-grid{break-inside:avoid}
 }
 @media(max-width:680px){.catalog-family-record{grid-template-columns:repeat(2,1fr)}.catalog-family-record>div:nth-child(5){grid-column:1/-1}}
