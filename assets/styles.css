@@ -318,9 +318,8 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
 
 /* Descarga en PDF de la ficha 360 vía impresión del navegador */
 @media print{
-  body *{visibility:hidden}
-  #modalBack,#modalBack *{visibility:visible}
-  #modalBack{position:absolute;top:0;left:0;width:100%;display:block;background:none;backdrop-filter:none;padding:0;opacity:1}
+  body>*:not(#modalBack){display:none!important}
+  #modalBack{position:static;display:block;background:none;backdrop-filter:none;padding:0;opacity:1}
   #modal{position:static;width:auto;max-width:none;height:auto;max-height:none;overflow:visible;box-shadow:none;transform:none;border-radius:0}
   .bull-sheet-scroll{overflow:visible;height:auto;max-height:none}
   #modalClose,.bull-sheet-actions{display:none!important}
