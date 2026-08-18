@@ -6,7 +6,7 @@ const isQ=(t)=>t.beta==="A2/A2"&&t.kappa==="BB";
 const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',short:'CONV'},'conv-sex':{label:'Sexado + Convencional',short:'SEX + CONV'},'s-conv':{label:'Súper convencional',short:'S-CONV'}};
 const availability=(key)=>AVAILABILITY[key]||{label:'Consultar',short:'CONSULTAR'};
 const signed=n=>`${Number(n)>0?'+':''}${n}`;
-const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','sta'];
+const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','hcc'];
 function pass(t){
   if(activeF==="a2"&&t.beta!=="A2/A2")return false;
   if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
@@ -41,7 +41,7 @@ function renderTable(){
     <td class="metric">${signed(Number(t.ptat).toFixed(2))}</td>
     <td class="metric">${signed(Number(t.udc).toFixed(2))}</td>
     <td class="metric">${signed(Number(t.flc).toFixed(2))}</td>
-    <td class="metric">${signed(Number(t.sta).toFixed(2))}</td>
+    <td class="metric">${signed(Number(t.hcc).toFixed(2))}</td>
     <td><span class="table-pill ${t.beta==='A2/A2'?'hot':''}">${t.beta}</span></td>
     <td><span class="table-pill ${t.kappa==='BB'?'hot':''}">${t.kappa}</span></td>
     <td class="table-name-cell">${t.damName}</td>
@@ -50,7 +50,7 @@ function renderTable(){
   </tr>`).join('');
   tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
 }
-function fichaDerived(t){const source=window.LINEAR_TRAITS?.[t.codigo]||t.traits||[];return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,feedSaved:t.feedSaved,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),signed,traits:source.map(([label,value,left,right,descriptor])=>({label,value,left,right,descriptor,size:Math.min(Math.abs(Number(value))/2*50,50),direction:Number(value)>=0?'positive':'negative'}))};}
+function fichaDerived(t){const source=window.LINEAR_TRAITS?.[t.codigo]||t.traits||[];return{tpi:t.tpi,protein:t.protein,reliability:t.milkR,pl:t.pl,dpr:t.dpr,scs:t.scs,fatPct:Number(t.fatPct).toFixed(2),proteinPct:Number(t.proteinPct).toFixed(2),cfp:t.cfp,mastitis:t.mastitis,fertIndex:t.fertIndex,livability:t.livability,feedSaved:t.feedSaved,ptat:Number(t.ptat).toFixed(2),udc:Number(t.udc).toFixed(2),flc:Number(t.flc).toFixed(2),hcc:Number(t.hcc).toFixed(2),signed,traits:source.map(([label,value,left,right,descriptor])=>({label,value,left,right,descriptor,size:Math.min(Math.abs(Number(value))/2*50,50),direction:Number(value)>=0?'positive':'negative'}))};}
 function metricRow(label,value,highlight=''){return `<div class="bull-metric-row"><span>${label}</span><b class="${highlight}">${value}</b></div>`;}
 function openModal(t){
   const d=fichaDerived(t),extended=t.nombreRegistrado?`<section class="catalog-family-record"><div><small>NOMBRE REGISTRADO</small><b>${t.nombreRegistrado}</b></div><div><small>aAa</small><b>${t.aaa}</b></div><div><small>HAPLOTIPO</small><b>${t.haplotipos}</b></div><div><small>MADRE</small><b>${t.dam}</b></div><div><small>ABUELA MATERNA</small><b>${t.mgd}</b></div><a href="${t.sourceUrl}" target="_blank" rel="noopener noreferrer">Ver perfil complementario en AI-Total ↗</a></section>`:'';
@@ -74,7 +74,7 @@ function openModal(t){
         </aside>
       </div>
       <section class="catalog-type-zone full-linear-zone">
-        <div class="catalog-section-title"><div><small>MORFOLOGÍA COMPLETA · 18 RASGOS</small><h3>Conformación funcional</h3></div><div class="catalog-type-summary"><span>PTAT <b>${d.signed(d.ptat)}</b></span><span>UDC <b>${d.signed(d.udc)}</b></span><span>FLC <b>${d.signed(d.flc)}</b></span></div></div>
+        <div class="catalog-section-title"><div><small>MORFOLOGÍA COMPLETA · 18 RASGOS</small><h3>Conformación funcional</h3></div><div class="catalog-type-summary"><span>PTAT <b>${d.signed(d.ptat)}</b></span><span>UDC <b>${d.signed(d.udc)}</b></span><span>FLC <b>${d.signed(d.flc)}</b></span><span>HCC <b>${d.signed(d.hcc)}</b></span></div></div>
         <div class="linear-axis" aria-hidden="true"><span>-2</span><span>-1</span><span>0</span><span>1</span><span>2</span></div>
         <div class="full-linear-list">${d.traits.map(trait=>`<div class="linear-catalog-row"><strong>${trait.label}</strong><div class="linear-catalog-chart" title="${trait.left} a ${trait.right}"><i class="${trait.direction}" style="--size:${trait.size}%"></i></div><b>${d.signed(trait.value)}</b><span>${trait.descriptor}</span></div>`).join('')}</div>
       </section>
