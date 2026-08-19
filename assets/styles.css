@@ -348,9 +348,9 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
   .sire-table th:nth-child(1),.sire-table td:nth-child(1){width:210px;transition:width .28s ease}
   .sire-table.name-collapsed th:nth-child(1),.sire-table.name-collapsed td:nth-child(1){width:42px}
   .sire-table th:nth-child(2),.sire-table td:nth-child(2){width:96px}
-  .sire-table th:nth-child(3),.sire-table td:nth-child(3),.sire-table th:nth-child(4),.sire-table td:nth-child(4){width:130px}
-  .sire-table th:nth-child(5),.sire-table td:nth-child(5){width:105px}
-  .sire-table th:nth-child(n+6),.sire-table td:nth-child(n+6){width:86px}
+  .sire-table th:nth-child(3),.sire-table td:nth-child(3){width:105px}
+  .sire-table th:nth-child(n+4):nth-child(-n+22),.sire-table td:nth-child(n+4):nth-child(-n+22),.sire-table th:nth-child(25),.sire-table td:nth-child(25){width:86px}
+  .sire-table th:nth-child(23),.sire-table td:nth-child(23),.sire-table th:nth-child(24),.sire-table td:nth-child(24){width:130px}
   .sire-table th:first-child,.sire-table td:first-child{left:0;border-right:1px solid color-mix(in srgb,var(--red) 30%,var(--border));scroll-snap-align:start}
   .sire-table th{overflow:hidden}
   .sire-table th:first-child{overflow:visible}

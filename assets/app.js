@@ -7,6 +7,7 @@ const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',
 const availability=(key)=>AVAILABILITY[key]||{label:'Consultar',short:'CONSULTAR'};
 const signed=n=>`${Number(n)>0?'+':''}${n}`;
 const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','hcc'];
+const MAX_FILTER_COLS=['sce','scs'];
 function pass(t){
   if(activeF==="a2"&&t.beta!=="A2/A2")return false;
   if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
@@ -14,7 +15,7 @@ function pass(t){
   if(activeF==="proven"&&Number(t.milkR)<=90)return false;
   if(activeF==="genomic"&&Number(t.milkR)>90)return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+t.sireName+" "+t.damName+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
-  for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(NUMERIC_COLS.includes(key)){if(Number(t[key])>Number(value))return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
+  for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(NUMERIC_COLS.includes(key)){const metric=Number(t[key]),limit=Number(value);if(MAX_FILTER_COLS.includes(key)?metric>limit:metric<limit)return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
   return true;
 }
 function renderTable(){
@@ -26,8 +27,6 @@ function renderTable(){
   tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
     <td class="sire-primary-cell"><div class="sire-id"><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>${Number(t.milkR)>90?'Probado':'Genómico'} · ${t.milkR}%</small></div></div></td>
     <td class="metric">${t.codigo}</td>
-    <td class="table-name-cell" title="${t.sireName}"><span class="table-name-text">${t.sireName}</span></td>
-    <td class="table-name-cell" title="${t.damName}"><span class="table-name-text">${t.damName}</span></td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
     <td class="metric">${t.tpi}</td>
     <td class="metric-hi">+${t.nm}</td>
@@ -48,6 +47,8 @@ function renderTable(){
     <td class="metric">${signed(Number(t.hcc).toFixed(2))}</td>
     <td><span class="table-pill ${t.beta==='A2/A2'?'hot':''}">${t.beta}</span></td>
     <td><span class="table-pill ${t.kappa==='BB'?'hot':''}">${t.kappa}</span></td>
+    <td class="table-name-cell" title="${t.sireName}"><span class="table-name-text">${t.sireName}</span></td>
+    <td class="table-name-cell" title="${t.damName}"><span class="table-name-text">${t.damName}</span></td>
     <td><span class="row-open">›</span></td>
   </tr>`).join('');
   tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
