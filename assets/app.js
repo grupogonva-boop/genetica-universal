@@ -7,12 +7,15 @@ const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',
 const availability=(key)=>AVAILABILITY[key]||{label:'Consultar',short:'CONSULTAR'};
 const signed=n=>`${Number(n)>0?'+':''}${n}`;
 const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','hcc'];
+const MAX_FILTER_COLS=['sce','scs'];
 function pass(t){
   if(activeF==="a2"&&t.beta!=="A2/A2")return false;
   if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
   if(activeF==="conv"&&!['conv','conv-sex','s-conv'].includes(t.disponibilidad))return false;
-  if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
-  for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(NUMERIC_COLS.includes(key)){if(t[key]<Number(value))return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
+  if(activeF==="proven"&&Number(t.milkR)<=90)return false;
+  if(activeF==="genomic"&&Number(t.milkR)>90)return false;
+  if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+t.sireName+" "+t.damName+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
+  for(const [key,value] of Object.entries(columnFilters)){if(!value)continue;if(NUMERIC_COLS.includes(key)){const metric=Number(t[key]),limit=Number(value);if(MAX_FILTER_COLS.includes(key)?metric>limit:metric<limit)return false;}else if(!String(t[key]).toLowerCase().includes(String(value).toLowerCase()))return false;}
   return true;
 }
 function renderTable(){
@@ -22,7 +25,7 @@ function renderTable(){
   document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===sortKey;btn.classList.toggle('active',active);btn.querySelector('span').textContent=active?(sortDir===1?'↑':'↓'):'↕';});
   if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="25">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
   tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
-    <td><div class="sire-id"><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>Holstein</small></div></div></td>
+    <td class="sire-primary-cell"><div class="sire-id"><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>${Number(t.milkR)>90?'Probado':'Genómico'} · ${t.milkR}%</small></div></div></td>
     <td class="metric">${t.codigo}</td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
     <td class="metric">${t.tpi}</td>
@@ -44,8 +47,8 @@ function renderTable(){
     <td class="metric">${signed(Number(t.hcc).toFixed(2))}</td>
     <td><span class="table-pill ${t.beta==='A2/A2'?'hot':''}">${t.beta}</span></td>
     <td><span class="table-pill ${t.kappa==='BB'?'hot':''}">${t.kappa}</span></td>
-    <td class="table-name-cell">${t.damName}</td>
-    <td class="table-name-cell">${t.sireName}</td>
+    <td class="table-name-cell" title="${t.sireName}"><span class="table-name-text">${t.sireName}</span></td>
+    <td class="table-name-cell" title="${t.damName}"><span class="table-name-text">${t.damName}</span></td>
     <td><span class="row-open">›</span></td>
   </tr>`).join('');
   tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
@@ -101,15 +104,17 @@ document.getElementById('catalogModalBack').addEventListener('click',e=>{if(e.ta
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(closeBullImage())return;if(closeCatalogModal())return;closeModal();}});
 document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');const mode=b.dataset.f;if(mode==='tpi'||mode==='nm'){activeF='all';sortKey=mode;sortDir=-1;}else{activeF=mode;sortKey=null;sortDir=1;}renderTable();});
 document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value;renderTable();});
-document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=['nombre','codigo','beta','kappa','disponibilidad'].includes(key)?1:-1;}renderTable();}));
+document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=['nombre','codigo','beta','kappa','disponibilidad','sireName','damName'].includes(key)?1:-1;}renderTable();}));
 document.querySelectorAll('.column-filters input,.column-filters select').forEach(input=>input.addEventListener('input',()=>{columnFilters[input.dataset.col]=input.value.trim();renderTable();}));
 document.getElementById('clearFilters').addEventListener('click',()=>{activeF='all';searchTerm='';sortKey=null;sortDir=1;columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach((chip,i)=>chip.classList.toggle('active',i===0));renderTable();});
-document.getElementById('toggleNameCol').addEventListener('click',e=>{const hidden=document.querySelector('.sire-table').classList.toggle('hide-name');e.target.textContent=hidden?'Mostrar nombre':'Ocultar nombre';});
+const nameColumnToggle=document.getElementById('toggleNameColumn');
+nameColumnToggle?.addEventListener('click',()=>{const table=document.querySelector('.sire-table'),collapsed=table.classList.toggle('name-collapsed');nameColumnToggle.setAttribute('aria-expanded',String(!collapsed));nameColumnToggle.setAttribute('aria-label',collapsed?'Expandir la columna del nombre':'Contraer la columna del nombre');nameColumnToggle.title=collapsed?'Expandir nombre del toro':'Contraer nombre del toro';nameColumnToggle.querySelector('span').textContent=collapsed?'›':'‹';});
 document.getElementById('navToggle').addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('show'));
 document.getElementById('themeToggle').addEventListener('click',()=>{const r=document.documentElement;const dark=r.getAttribute('data-theme')==='dark';if(dark){r.removeAttribute('data-theme');}else{r.setAttribute('data-theme','dark');}try{localStorage.setItem('gu-theme',dark?'light':'dark');}catch(e){}});
 document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>document.getElementById('navLinks').classList.remove('show')));
 document.querySelectorAll('.wa-link').forEach(a=>{a.href=waLink(CONFIG.msgGeneral);a.target="_blank";a.rel="noopener noreferrer";});
 document.querySelectorAll('.wa-genomic').forEach(a=>{a.href=waLink('Hola Genética Universal, me interesa conocer el mapeo genómico por pruebas de ADN para mi establo.');a.target='_blank';a.rel='noopener noreferrer';});
+document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');
 const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 function ac(el){const t=+el.dataset.count,d=1400,t0=performance.now(),format=new Intl.NumberFormat('es-MX');function s(n){const p=Math.min((n-t0)/d,1),e=1-Math.pow(1-p,3);el.textContent=format.format(Math.round(t*e));if(p<1)requestAnimationFrame(s);}requestAnimationFrame(s);}
