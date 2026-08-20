@@ -91,7 +91,7 @@ async function handleAncestorUpload(index,file){
 $('#addAncestor').addEventListener('click',()=>{sire.ancestors.push({relation:'',name:'',foto:''});renderAncestors();});
 
 function renderTraits(){
-  $('#traitsGrid').innerHTML=sire.traits.map((trait,i)=>`<div class="trait-row"><label>${escapeHtml(trait[0])} <small style="color:#686d79">(${trait[2]} → ${trait[3]})</small></label><input type="number" step="0.01" min="-3" max="3" data-trait="${i}" value="${trait[1]}"></div>`).join('');
+  $('#traitsGrid').innerHTML=sire.traits.map((trait,i)=>`<div class="trait-row"><label>${escapeHtml(trait[0])} <small style="color:#686d79">(${trait[2]} → ${trait[3]})</small></label><input type="number" step="0.01" data-trait="${i}" value="${trait[1]}"></div>`).join('');
   document.querySelectorAll('[data-trait]').forEach(input=>input.addEventListener('input',()=>{const i=Number(input.dataset.trait),value=input.value===''?0:Number(input.value);sire.traits[i][1]=value;sire.traits[i][4]=value<0?sire.traits[i][2]:sire.traits[i][3];refreshPreview();}));
 }
 
