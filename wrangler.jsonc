@@ -13,13 +13,13 @@
     "run_worker_first": ["/api/*"]
   },
   "d1_databases": [
-    { "binding": "DB", "database_name": "genetica-universal-admin", "migrations_dir": "worker/migrations" }
+    { "binding": "DB", "database_name": "genetica-universal-admin", "database_id": "3c0546f8-99d8-4b26-bd49-409d9c3da2c6", "migrations_dir": "worker/migrations" }
   ],
   "r2_buckets": [
     { "binding": "MEDIA", "bucket_name": "genetica-universal-media" }
   ],
   "vars": {
-    "ADMIN_EMAIL": "richard4790.rg@gmail.com",
+    "ADMIN_EMAIL": "grupo.gonva@gmail.com",
     "PUBLIC_ORIGINS": "https://geneticauniversal.com,https://www.geneticauniversal.com"
   },
   "observability": {
