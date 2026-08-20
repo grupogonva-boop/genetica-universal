@@ -21,6 +21,8 @@
 .mini-drop span{position:relative;z-index:1;font-size:.65rem;color:#a9abb4}
 .mini-drop.has-img span{background:rgba(8,9,13,.72);padding:4px 8px;border-radius:7px;position:absolute;bottom:8px;color:#fff}
 .mini-drop small{position:relative;z-index:1;color:#686d79;font-size:.6rem}
+.mini-drop-remove{position:absolute;top:6px;right:6px;z-index:2;width:22px;height:22px;border:0;border-radius:50%;background:rgba(8,9,13,.72);color:#fff;font-size:1rem;line-height:1;display:grid;place-items:center;cursor:pointer}
+.mini-drop-remove:hover{background:var(--red)}
 .ancestor-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .ancestor-row{display:grid;grid-template-columns:110px 1fr 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:11px;background:#0e1016}
 .ancestor-row label{margin:0}

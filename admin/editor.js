@@ -97,6 +97,10 @@ function renderTraits(){
 
 function setupDropzone(id,slot,getUrl,setUrl){
   const drop=$(id),input=drop.querySelector('input');
+  const removeBtn=document.createElement('button');
+  removeBtn.type='button';removeBtn.className='mini-drop-remove';removeBtn.hidden=true;removeBtn.setAttribute('aria-label','Quitar archivo');removeBtn.textContent='×';
+  drop.appendChild(removeBtn);
+  removeBtn.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();input.value='';setUrl('');paintDropzone(drop,slot,'');refreshPreview();});
   ['dragenter','dragover'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.add('drag');}));
   ['dragleave','drop'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.remove('drag');}));
   drop.addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file)handleUpload(file);});
@@ -112,7 +116,8 @@ function setupDropzone(id,slot,getUrl,setUrl){
 }
 function paintDropzone(drop,slot,url){
   drop.querySelectorAll('img').forEach(img=>img.remove());
-  const span=drop.querySelector('span');
+  const span=drop.querySelector('span'),removeBtn=drop.querySelector('.mini-drop-remove');
+  if(removeBtn)removeBtn.hidden=!url;
   if(url&&slot!=='ficha'){drop.classList.add('has-img');const img=document.createElement('img');img.src=url;drop.insertBefore(img,drop.firstChild);span.textContent=slot==='main'?'Foto principal':'Otro ángulo';}
   else if(url&&slot==='ficha'){drop.classList.remove('has-img');span.textContent='PDF cargado ✓';}
   else{drop.classList.remove('has-img');span.textContent=slot==='main'?'Foto principal':slot==='alt'?'Otro ángulo':'Ficha PDF';}
