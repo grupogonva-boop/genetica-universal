@@ -47,7 +47,7 @@ export function cleanTraits(value) {
 const AVAILABILITY = new Set(['sex', 'conv', 'conv-sex', 's-conv']);
 
 const NUMERIC_FIELDS = ['nm', 'cm', 'milk', 'fat', 'ccr', 'cfp', 'dpr', 'fatPct', 'feedSaved', 'fertIndex', 'flc', 'hcc', 'livability', 'mastitis', 'milkR', 'pl', 'protein', 'proteinPct', 'ptat', 'sce', 'scs', 'sta', 'tpi', 'udc'];
-const TEXT_FIELDS = { aaa: 40, dam: 200, damName: 200, dob: 20, haplotipos: 20, mgd: 200, nombreRegistrado: 160, reg: 60, sireName: 200, source: 120, sourceUrl: 500, beta: 20, kappa: 20, ped: 240, raza: 50 };
+const TEXT_FIELDS = { aaa: 40, dam: 200, damName: 200, dob: 20, haplotipos: 20, mgd: 200, mgs: 200, mggs: 200, mggd: 200, nombreRegistrado: 160, reg: 60, sireName: 200, source: 120, sourceUrl: 500, beta: 20, kappa: 20, ped: 240, raza: 50 };
 
 /** Valida el cuerpo completo de un semental (crear o editar). Lanza un Error
  * con mensaje en español listo para mostrar si algo es inválido. */

@@ -22,7 +22,7 @@ const SECTIONS={
   ],
   fieldsPedigri:[
     {key:'ped',label:'Pedigrí corto (Sire × MGS × MGGS)'},{key:'sireName',label:'Sire (nombre completo)'},{key:'damName',label:'Dam (nombre completo)'},
-    {key:'dam',label:'Madre (texto libre)'},{key:'mgd',label:'Abuela materna (MGD)'},{key:'reg',label:'Registro'},{key:'dob',label:'Nacimiento'},
+    {key:'dam',label:'Madre (texto libre)'},{key:'mgd',label:'Abuela materna (MGD)'},{key:'mgs',label:'Abuelo materno (MGS)'},{key:'mggs',label:'Bisabuelo materno (MGGS)'},{key:'mggd',label:'Bisabuela materna (MGGD)'},{key:'reg',label:'Registro'},{key:'dob',label:'Nacimiento'},
     {key:'haplotipos',label:'Haplotipos'},{key:'aaa',label:'aAa'},{key:'source',label:'Fuente'},{key:'sourceUrl',label:'URL de fuente'},
   ],
   fieldsProduccion:[
