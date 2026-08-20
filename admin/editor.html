@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'">
+  <title id="editorTitle">Nuevo semental · Genética Universal</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="vendor/ficha-preview.css">
+</head>
+<body>
+  <div class="ambient a"></div><div class="ambient b"></div>
+  <main>
+    <header class="brand"><div class="brand-mark">GU</div><div><b>GENÉTICA UNIVERSAL</b><small>Centro de administración</small></div><span class="secure">● CONEXIÓN SEGURA</span></header>
+
+    <section class="dashboard" id="dashboard">
+      <div class="dash-head">
+        <div><p class="eyebrow" id="editorEyebrow">NUEVO SEMENTAL</p><h1 id="editorHeading">Agregar semental</h1><p>Completa los datos, sube las fotos y el PDF descargable. La vista previa se actualiza al momento.</p></div>
+        <div class="dash-actions"><a class="ghost" href="index.html">← Volver al catálogo</a></div>
+      </div>
+
+      <form id="editorForm" class="editor-shell">
+        <div class="editor-form">
+          <section class="panel">
+            <div class="panel-title"><span>01</span><div><h2>Identidad</h2><p>Código y nombre son obligatorios.</p></div></div>
+            <div class="field-grid" id="fieldsIdentidad"></div>
+            <label class="checkbox-row"><input id="activoCheck" type="checkbox" checked> Semental activo (visible en el sitio público)</label>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title"><span>02</span><div><h2>Fotos y documentos</h2><p>JPG, PNG o WEBP · máximo 8 MB. PDF · máximo 15 MB.</p></div></div>
+            <div class="dropzone-row">
+              <label class="mini-drop" id="dropMain" data-slot="main"><input type="file" accept="image/jpeg,image/png,image/webp"><span>Foto principal</span><small>Arrastra o haz clic</small></label>
+              <label class="mini-drop" id="dropAlt" data-slot="alt"><input type="file" accept="image/jpeg,image/png,image/webp"><span>Otro ángulo</span><small>Opcional</small></label>
+              <label class="mini-drop" id="dropFicha" data-slot="ficha"><input type="file" accept="application/pdf"><span>Ficha PDF</span><small>Descargable del sitio</small></label>
+            </div>
+            <div class="panel-title" style="margin-top:22px"><div><h2 style="font-size:.8rem">Fotos de familiares</h2><p>Madre, padre, abuela, hija… la relación es texto libre.</p></div></div>
+            <div class="ancestor-list" id="ancestorList"></div>
+            <button type="button" class="add-row-btn" id="addAncestor">+ Agregar familiar</button>
+          </section>
+
+          <section class="panel"><div class="panel-title"><span>03</span><div><h2>Pedigrí</h2></div></div><div class="field-grid" id="fieldsPedigri"></div></section>
+          <section class="panel"><div class="panel-title"><span>04</span><div><h2>Producción</h2></div></div><div class="field-grid" id="fieldsProduccion"></div></section>
+          <section class="panel"><div class="panel-title"><span>05</span><div><h2>Economía</h2></div></div><div class="field-grid" id="fieldsEconomia"></div></section>
+          <section class="panel"><div class="panel-title"><span>06</span><div><h2>Salud y fertilidad</h2></div></div><div class="field-grid" id="fieldsSalud"></div></section>
+          <section class="panel"><div class="panel-title"><span>07</span><div><h2>Conformación funcional</h2><p>Resumen (PTAT/UDC/FLC/HCC/STA) y los 18 rasgos lineales.</p></div></div>
+            <div class="field-grid" id="fieldsConformacion"></div>
+            <div class="traits-grid" id="traitsGrid" style="margin-top:18px"></div>
+          </section>
+
+          <div class="form-status" id="editorStatus" role="status"></div>
+          <div class="editor-actions">
+            <a class="ghost-link" href="index.html">Cancelar</a>
+            <button type="submit" id="saveButton">Guardar semental</button>
+          </div>
+        </div>
+
+        <aside class="editor-preview">
+          <h3>Vista previa de la ficha</h3>
+          <div id="fichaPreview"></div>
+        </aside>
+      </form>
+    </section>
+  </main>
+  <footer>Genética Universal × GONVAX · Administración de datos genómicos</footer>
+  <script src="vendor/ficha-render.js"></script>
+  <script src="editor.js" defer></script>
+</body>
+</html>

@@ -1,3 +1,7 @@
+import { cleanText, cleanDataText, cleanNumber, cleanImageUrl, cleanGenomicData } from './lib/validation.js';
+import { publicSires, listSires, getSire, createSire, updateSire, setSireActive } from './routes/sires.js';
+import { handleUpload } from './routes/upload.js';
+
 const SESSION_COOKIE='gu_admin_session';
 const MAX_BODY_BYTES=3_000_000;
 const MAX_ROWS=500;
@@ -8,6 +12,22 @@ function base64url(bytes){return btoa(String.fromCharCode(...bytes)).replace(/\+
 function decodeBase64url(value){const normalized=value.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(value.length/4)*4,'=');return Uint8Array.from(atob(normalized),char=>char.charCodeAt(0));}
 async function hmac(value,secret){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(value)));}
 async function secureEqual(left,right){const [a,b]=await Promise.all([left,right].map(value=>crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))));return crypto.subtle.timingSafeEqual(a,b);}
+
+// PBKDF2-SHA256 sobre la contraseña + un salt fijo por instalación, guardado
+// como secreto (ADMIN_PASSWORD_HASH/ADMIN_PASSWORD_SALT) en vez de la
+// contraseña en texto plano. Ver ADMIN_DEPLOY.md para rotar el secreto.
+async function hashPassword(password,saltHex){
+  const salt=Uint8Array.from(saltHex.match(/.{2}/g)||[],b=>parseInt(b,16));
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
+  return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function verifyPassword(password,env){
+  if(!env.ADMIN_PASSWORD_HASH||!env.ADMIN_PASSWORD_SALT)return false;
+  const computed=await hashPassword(password,env.ADMIN_PASSWORD_SALT);
+  return secureEqual(computed,env.ADMIN_PASSWORD_HASH);
+}
+
 async function createSession(email,secret){const payload=base64url(new TextEncoder().encode(JSON.stringify({email,exp:Date.now()+8*60*60*1000})));return `${payload}.${base64url(await hmac(payload,secret))}`;}
 async function readSession(request,env){
   const token=cookieValue(request,SESSION_COOKIE);if(!token||!env.SESSION_SECRET)return null;const [payload,signature]=token.split('.');if(!payload||!signature)return null;
@@ -15,11 +35,6 @@ async function readSession(request,env){
 }
 async function readJson(request){const length=Number(request.headers.get('content-length')||0);if(!length||length>MAX_BODY_BYTES)throw new Error('Tamaño de solicitud inválido');return request.json();}
 function sameOrigin(request){const origin=request.headers.get('origin');return origin===new URL(request.url).origin;}
-function cleanText(value,max){return String(value??'').trim().slice(0,max);}
-function cleanDataText(value,max){return cleanText(value,max).replace(/[<>&"'`]/g,'');}
-function cleanNumber(value){if(value===null||value===''||value===undefined)return null;const parsed=Number(value);return Number.isFinite(parsed)?parsed:null;}
-function cleanImageUrl(value){const text=cleanText(value,500);if(!text)return'';try{const url=new URL(text);return url.protocol==='https:'?url.href:'';}catch{return'';}}
-function cleanGenomicData(value){if(!value||typeof value!=='object'||Array.isArray(value))return{};const output={};for(const [key,item] of Object.entries(value).slice(0,200)){const safeKey=cleanDataText(key,120);if(!safeKey||!['string','number','boolean'].includes(typeof item))continue;output[safeKey]=typeof item==='string'?cleanDataText(item,500):item;}return output;}
 function publicCors(request,env){const origin=request.headers.get('origin');const allowed=(env.PUBLIC_ORIGINS||'').split(',').map(value=>value.trim());return allowed.includes(origin)?{'access-control-allow-origin':origin,'vary':'Origin'}:{};}
 async function loginLimited(request,env){
   const ip=request.headers.get('cf-connecting-ip')||'unknown',digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip)),key=base64url(new Uint8Array(digest));const now=Date.now(),windowMs=15*60*1000;
@@ -32,14 +47,14 @@ async function recordLoginFailure(request,env){const ip=request.headers.get('cf-
 async function handleApi(request,env,url){
   if(request.method==='OPTIONS'&&url.pathname==='/api/public/sires'){const headers=publicCors(request,env);return new Response(null,{status:204,headers:{...headers,'access-control-allow-methods':'GET, OPTIONS'}});}
   if(url.pathname==='/api/public/sires'&&request.method==='GET'){
-    const result=await env.DB.prepare('SELECT codigo,nombre,nm,cm,milk,fat,beta,kappa,ped,foto,raza,genomic_json,updated_at FROM sires WHERE activo=1 ORDER BY nm DESC, nombre ASC').all();
-    return json({sires:result.results.map(row=>({...row,genomic_data:row.genomic_json?JSON.parse(row.genomic_json):{}}))},200,{...publicCors(request,env),'cache-control':'public, max-age=300'});
+    const data=await publicSires(env);
+    return json(data,200,{...publicCors(request,env),'cache-control':'public, max-age=300'});
   }
   if(!['GET','HEAD'].includes(request.method)&&!sameOrigin(request))return json({error:'Origen no autorizado'},403);
   if(url.pathname==='/api/login'&&request.method==='POST'){
     if(await loginLimited(request,env))return json({error:'Demasiados intentos. Espera 15 minutos.'},429);
-    if(!env.ADMIN_EMAIL||!env.ADMIN_PASSWORD||!env.SESSION_SECRET)return json({error:'El administrador todavía no tiene sus secretos configurados.'},503);
-    const body=await readJson(request),email=cleanText(body.email,180).toLowerCase(),password=cleanText(body.password,300);const [validEmail,validPassword]=await Promise.all([secureEqual(email,env.ADMIN_EMAIL.toLowerCase()),secureEqual(password,env.ADMIN_PASSWORD)]);
+    if(!env.ADMIN_EMAIL||!env.ADMIN_PASSWORD_HASH||!env.SESSION_SECRET)return json({error:'El administrador todavía no tiene sus secretos configurados.'},503);
+    const body=await readJson(request),email=cleanText(body.email,180).toLowerCase(),password=cleanText(body.password,300);const [validEmail,validPassword]=await Promise.all([secureEqual(email,env.ADMIN_EMAIL.toLowerCase()),verifyPassword(password,env)]);
     if(!validEmail||!validPassword){await recordLoginFailure(request,env);return json({error:'Correo o contraseña incorrectos'},401);}
     const session=await createSession(env.ADMIN_EMAIL,env.SESSION_SECRET);return json({email:env.ADMIN_EMAIL},200,{'set-cookie':`${SESSION_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`});
   }
@@ -47,10 +62,27 @@ async function handleApi(request,env,url){
   if(url.pathname==='/api/session'&&request.method==='GET')return json(session?{authenticated:true,email:session.email}:{authenticated:false},session?200:401);
   if(!session)return json({error:'Sesión vencida. Vuelve a ingresar.'},401);
   if(url.pathname==='/api/logout'&&request.method==='POST')return json({ok:true},200,{'set-cookie':`${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`});
-  if(url.pathname==='/api/sires'&&request.method==='GET'){
-    const [sires,lastImport]=await Promise.all([env.DB.prepare('SELECT codigo,nombre,nm,cm,milk,fat,beta,kappa,ped,foto,raza,activo,updated_at FROM sires ORDER BY updated_at DESC').all(),env.DB.prepare("SELECT created_at FROM import_batches WHERE status='completed' ORDER BY created_at DESC LIMIT 1").first()]);
-    return json({sires:sires.results.map(row=>({...row,activo:Boolean(row.activo)})),lastImport:lastImport?.created_at||null});
+
+  if(url.pathname==='/api/sires'&&request.method==='GET')return json(await listSires(env));
+  if(url.pathname==='/api/sires'&&request.method==='POST'){
+    try{return json(await createSire(env,session,await readJson(request)),201);}catch(error){return json({error:error.message},error.status||400);}
   }
+  const sireMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})$/);
+  if(sireMatch&&request.method==='GET'){const row=await getSire(env,sireMatch[1].toUpperCase());return row?json(row):json({error:'No encontrado'},404);}
+  if(sireMatch&&request.method==='PUT'){
+    try{return json(await updateSire(env,session,sireMatch[1].toUpperCase(),await readJson(request)));}catch(error){return json({error:error.message},error.status||400);}
+  }
+  if(sireMatch&&request.method==='DELETE'){
+    try{return json(await setSireActive(env,sireMatch[1].toUpperCase(),false));}catch(error){return json({error:error.message},error.status||400);}
+  }
+  const restoreMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})\/restore$/);
+  if(restoreMatch&&request.method==='POST'){
+    try{return json(await setSireActive(env,restoreMatch[1].toUpperCase(),true));}catch(error){return json({error:error.message},error.status||400);}
+  }
+  if(url.pathname==='/api/upload'&&request.method==='POST'){
+    try{return json(await handleUpload(request,env,session));}catch(error){return json({error:error.message},error.status||400);}
+  }
+
   if(url.pathname==='/api/import'&&request.method==='POST'){
     const body=await readJson(request);if(!Array.isArray(body.rows)||!body.rows.length||body.rows.length>MAX_ROWS)return json({error:`La carga debe contener entre 1 y ${MAX_ROWS} filas.`},400);
     const rows=[],seen=new Set();for(const input of body.rows){const codigo=cleanDataText(input.codigo,60).toUpperCase(),nombre=cleanDataText(input.nombre,120).toUpperCase();if(!codigo||!nombre)return json({error:'Cada fila necesita código y nombre.'},400);if(seen.has(codigo))return json({error:`Código duplicado: ${codigo}`},400);seen.add(codigo);rows.push({codigo,nombre,nm:cleanNumber(input.nm),cm:cleanNumber(input.cm),milk:cleanNumber(input.milk),fat:cleanNumber(input.fat),beta:cleanDataText(input.beta,20).toUpperCase(),kappa:cleanDataText(input.kappa,20).toUpperCase(),ped:cleanDataText(input.ped,240),foto:cleanImageUrl(input.foto),raza:cleanDataText(input.raza,50)||'Holstein',activo:input.activo===false?0:1,genomic:JSON.stringify(cleanGenomicData(input.genomic_data))});}

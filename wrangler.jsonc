@@ -15,6 +15,9 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "genetica-universal-admin", "migrations_dir": "worker/migrations" }
   ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "genetica-universal-media" }
+  ],
   "vars": {
     "ADMIN_EMAIL": "richard4790.rg@gmail.com",
     "PUBLIC_ORIGINS": "https://geneticauniversal.com,https://www.geneticauniversal.com"

@@ -16,7 +16,7 @@
     <section class="login-card" id="loginView">
       <div class="login-icon">↗</div><p class="eyebrow">ACCESO RESTRINGIDO</p><h1>Bienvenido de vuelta</h1><p>Importa y valida el catálogo genómico antes de publicarlo.</p>
       <form id="loginForm">
-        <label>Correo electrónico<input id="email" name="email" type="email" value="richard4790.rg@gmail.com" autocomplete="username" required></label>
+        <label>Correo electrónico<input id="email" name="email" type="email" value="grupo.gonva@gmail.com" autocomplete="username" required></label>
         <label>Contraseña<input id="password" name="password" type="password" autocomplete="current-password" required></label>
         <button type="submit">Ingresar al administrador</button><div class="form-status" id="loginStatus" role="status"></div>
       </form>
@@ -47,8 +47,9 @@
         </section>
 
         <section class="panel existing-panel">
-          <div class="panel-title"><span>04</span><div><h2>Catálogo almacenado</h2><p>Últimos registros guardados en la base administrativa.</p></div><button class="text-btn" id="refresh">Actualizar</button></div>
-          <div class="preview-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>NM$</th><th>A2</th><th>Kappa</th><th>Actualizado</th></tr></thead><tbody id="existingRows"><tr><td colspan="6" class="empty">Sin datos.</td></tr></tbody></table></div>
+          <div class="panel-title"><span>04</span><div><h2>Catálogo de sementales</h2><p>Crea, edita, desactiva o restaura cada semental de forma individual.</p></div><div class="panel-title-actions"><button class="text-btn" id="refresh">Actualizar</button><a class="cta-btn" id="newSire" href="editor.html">+ Nuevo semental</a></div></div>
+          <label class="catalog-search"><input id="catalogSearch" type="search" placeholder="Buscar por código o nombre…"></label>
+          <div class="preview-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>NM$</th><th>A2</th><th>Kappa</th><th>Estado</th><th>Actualizado</th><th></th></tr></thead><tbody id="existingRows"><tr><td colspan="8" class="empty">Sin datos.</td></tr></tbody></table></div>
         </section>
       </div>
     </section>
