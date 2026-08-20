@@ -34,7 +34,7 @@
         <aside class="catalog-identity">
           <button class="ficha-photo bull-profile-photo" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="ficha-head-img" src="${t.foto}" alt="${t.nombre}"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4M8 10.5h5M10.5 8v5"/></svg></span></button>
           <div class="catalog-pedigree"><small>PEDIGRÍ</small><strong>${t.ped}</strong></div>
-          <div class="catalog-parents">${t.sireName?`<div><small>SIRE</small><b>${t.sireName}</b></div>`:''}${t.damName?`<div><small>DAM</small><b>${t.damName}</b></div>`:''}${t.mgs?`<div><small>MGS</small><b>${t.mgs}</b></div>`:''}${t.mggs?`<div><small>MGGS</small><b>${t.mggs}</b></div>`:''}${t.mggd?`<div><small>MGGD</small><b>${t.mggd}</b></div>`:''}</div>
+          <div class="catalog-parents">${t.sireName?`<div><small>SIRE</small><b>${t.sireName}</b></div>`:''}${t.damName?`<div><small>DAM</small><b>${t.damName}</b></div>`:''}${t.mgs?`<div><small>MGS</small><b>${t.mgs}</b></div>`:''}${t.mgd?`<div><small>MGD</small><b>${t.mgd}</b></div>`:''}${t.mggs?`<div><small>MGGS</small><b>${t.mggs}</b></div>`:''}${t.mggd?`<div><small>MGGD</small><b>${t.mggd}</b></div>`:''}</div>
           <div class="ficha-highlights"><span class="gbadge ${t.beta==='A2/A2'?'on':''}">Beta ${t.beta}</span><span class="gbadge ${t.kappa==='BB'?'on':''}">Kappa ${t.kappa}</span>${isQ(t)?'<span class="gbadge premium">★ Quesero</span>':''}</div>
           ${ancestorsBlock(t)}
         </aside>
