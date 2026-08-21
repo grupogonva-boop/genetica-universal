@@ -131,6 +131,15 @@ function renderHero(){
 }
 renderHero();
 
+/* Profundidad sutil del hero para punteros precisos; sin movimiento en touch o accesibilidad reducida. */
+(function initHeroDepth(){
+  const hero=document.querySelector('.hero-cinematic'),media=document.getElementById('heroMedia');
+  if(!hero||!media||matchMedia('(prefers-reduced-motion: reduce)').matches||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
+  let frame;
+  hero.addEventListener('pointermove',event=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const rect=hero.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width-.5,y=(event.clientY-rect.top)/rect.height-.5;media.style.setProperty('--hero-shift-x',`${x*-14}px`);media.style.setProperty('--hero-shift-y',`${y*-9}px`);});});
+  hero.addEventListener('pointerleave',()=>{cancelAnimationFrame(frame);media.style.setProperty('--hero-shift-x','0px');media.style.setProperty('--hero-shift-y','0px');});
+})();
+
 /* Cuando el administrador esté publicado, D1 sustituye al catálogo local. */
 async function syncRemoteCatalog(){
   if(!CONFIG.catalogApi||!['geneticauniversal.com','www.geneticauniversal.com'].includes(location.hostname))return;
