@@ -1,5 +1,5 @@
 import { cleanText, cleanDataText } from './lib/validation.js';
-import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, bulkUpsertSires } from './routes/sires.js';
+import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, purgeSire, bulkUpsertSires } from './routes/sires.js';
 import { handleUpload } from './routes/upload.js';
 
 const SESSION_COOKIE='gu_admin_session';
@@ -110,6 +110,10 @@ async function handleApi(request,env,url){
   const restoreMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})\/restore$/);
   if(restoreMatch&&request.method==='POST'){
     try{return json(await setSireActive(env,restoreMatch[1].toUpperCase(),true));}catch(error){return json({error:error.message},error.status||400);}
+  }
+  const purgeMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})\/purge$/);
+  if(purgeMatch&&request.method==='DELETE'){
+    try{return json(await purgeSire(env,purgeMatch[1].toUpperCase()));}catch(error){return json({error:error.message},error.status||400);}
   }
   if(url.pathname==='/api/upload'&&request.method==='POST'){
     try{return json(await handleUpload(request,env,session));}catch(error){return json({error:error.message},error.status||400);}

@@ -171,13 +171,14 @@ async function loadCatalog(){try{const data=await api('/api/sires');catalogRows=
 function renderCatalogRows(){
   const term=normalize(catalogSearch);
   const rows=catalogRows.filter(row=>!term||normalize(row.codigo).includes(term)||normalize(row.nombre).includes(term));
-  $('#existingRows').innerHTML=rows.length?rows.map(row=>`<tr><td>${escapeHtml(row.codigo)}</td><td>${escapeHtml(row.nombre)}</td><td>${row.nm??'—'}</td><td>${escapeHtml(row.beta||'—')}</td><td>${escapeHtml(row.kappa||'—')}</td><td><span class="status-pill ${row.activo?'on':'off'}">${row.activo?'Activo':'Inactivo'}</span></td><td>${row.updated_at?new Date(row.updated_at).toLocaleDateString('es-MX'):'—'}</td><td class="row-actions"><a class="text-btn" href="editor.html?codigo=${encodeURIComponent(row.codigo)}">Editar</a>${row.activo?`<button class="text-btn danger" data-deactivate="${escapeHtml(row.codigo)}">Eliminar</button>`:`<button class="text-btn" data-restore="${escapeHtml(row.codigo)}">Restaurar</button>`}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin resultados.</td></tr>';
+  $('#existingRows').innerHTML=rows.length?rows.map(row=>`<tr><td>${escapeHtml(row.codigo)}</td><td>${escapeHtml(row.nombre)}</td><td>${row.nm??'—'}</td><td>${escapeHtml(row.beta||'—')}</td><td>${escapeHtml(row.kappa||'—')}</td><td><span class="status-pill ${row.activo?'on':'off'}">${row.activo?'Activo':'Inactivo'}</span></td><td>${row.updated_at?new Date(row.updated_at).toLocaleDateString('es-MX'):'—'}</td><td class="row-actions"><a class="text-btn" href="editor.html?codigo=${encodeURIComponent(row.codigo)}">Editar</a>${row.activo?`<button class="text-btn danger" data-deactivate="${escapeHtml(row.codigo)}">Eliminar</button>`:`<button class="text-btn" data-restore="${escapeHtml(row.codigo)}">Restaurar</button><button class="text-btn danger" data-purge="${escapeHtml(row.codigo)}">Borrar definitivo</button>`}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin resultados.</td></tr>';
 }
 $('#catalogSearch').addEventListener('input',event=>{catalogSearch=event.target.value;renderCatalogRows();});
 $('#existingRows').addEventListener('click',async event=>{
-  const deactivate=event.target.closest('[data-deactivate]'),restore=event.target.closest('[data-restore]');
+  const deactivate=event.target.closest('[data-deactivate]'),restore=event.target.closest('[data-restore]'),purge=event.target.closest('[data-purge]');
   if(deactivate){const codigo=deactivate.dataset.deactivate;if(!confirm(`¿Desactivar a ${codigo}? Dejará de mostrarse en el sitio, pero podrás restaurarlo después.`))return;try{await api(`/api/sires/${encodeURIComponent(codigo)}`,{method:'DELETE'});await loadCatalog();}catch(error){alert(error.message);}return;}
-  if(restore){const codigo=restore.dataset.restore;try{await api(`/api/sires/${encodeURIComponent(codigo)}/restore`,{method:'POST',body:'{}'});await loadCatalog();}catch(error){alert(error.message);}}
+  if(restore){const codigo=restore.dataset.restore;try{await api(`/api/sires/${encodeURIComponent(codigo)}/restore`,{method:'POST',body:'{}'});await loadCatalog();}catch(error){alert(error.message);}return;}
+  if(purge){const codigo=purge.dataset.purge;if(!confirm(`¿Borrar definitivamente a ${codigo}? Esto elimina el registro y sus fotos/PDF. No se puede deshacer.`))return;try{await api(`/api/sires/${encodeURIComponent(codigo)}/purge`,{method:'DELETE'});await loadCatalog();}catch(error){alert(error.message);}}
 });
 $('#refresh').addEventListener('click',loadCatalog);
 $('#downloadTemplate').addEventListener('click',()=>{

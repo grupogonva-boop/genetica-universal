@@ -94,3 +94,18 @@ export async function setSireActive(env, codigo, activo) {
   await env.DB.prepare('UPDATE sires SET activo=?1, updated_at=?2 WHERE codigo=?3').bind(activo ? 1 : 0, new Date().toISOString(), codigo).run();
   return getSire(env, codigo);
 }
+
+// Borrado permanente. Solo se permite sobre un semental ya desactivado
+// (candado de seguridad contra borrar algo que sigue en uso), y de paso
+// limpia sus archivos en R2 para no dejar fotos/PDF huérfanos.
+export async function purgeSire(env, codigo) {
+  const existing = await env.DB.prepare('SELECT activo FROM sires WHERE codigo=?1').bind(codigo).first();
+  if (!existing) { const err = new Error('Ese semental no existe.'); err.status = 404; throw err; }
+  if (existing.activo) { const err = new Error('Solo se puede borrar permanentemente un semental ya desactivado.'); err.status = 400; throw err; }
+  const listed = await env.MEDIA.list({ prefix: `bulls/${codigo}/` });
+  const keys = listed.objects.map((o) => o.key);
+  keys.push(`fichas/${codigo}.pdf`);
+  await env.MEDIA.delete(keys);
+  await env.DB.prepare('DELETE FROM sires WHERE codigo=?1').bind(codigo).run();
+  return { ok: true };
+}
