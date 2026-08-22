@@ -22,6 +22,16 @@
       </form>
     </section>
 
+    <section class="login-card" id="changePasswordView" hidden>
+      <div class="login-icon">↗</div><p class="eyebrow">PRIMER ACCESO</p><h1>Crea tu contraseña</h1><p>Por seguridad, debes cambiar la contraseña temporal antes de continuar.</p>
+      <form id="changePasswordForm">
+        <label>Contraseña temporal<input id="cpCurrent" type="password" autocomplete="current-password" required></label>
+        <label>Nueva contraseña<input id="cpNew" type="password" autocomplete="new-password" minlength="10" required></label>
+        <label>Confirma la nueva contraseña<input id="cpConfirm" type="password" autocomplete="new-password" minlength="10" required></label>
+        <button type="submit">Guardar y entrar</button><div class="form-status" id="changePasswordStatus" role="status"></div>
+      </form>
+    </section>
+
     <section class="dashboard" id="dashboard" hidden>
       <div class="dash-head"><div><p class="eyebrow">CATÁLOGO GENÓMICO</p><h1>Importador de sementales</h1><p>Excel → mapeo → validación → catálogo.</p></div><div class="dash-actions"><span id="currentUser"></span><button class="ghost" id="logout">Cerrar sesión</button></div></div>
       <div class="kpis"><article><small>REGISTRADOS</small><strong id="totalSires">0</strong></article><article><small>ACTIVOS</small><strong id="activeSires">0</strong></article><article><small>A2/A2</small><strong id="a2Sires">0</strong></article><article><small>ÚLTIMA CARGA</small><strong id="lastImport">—</strong></article></div>

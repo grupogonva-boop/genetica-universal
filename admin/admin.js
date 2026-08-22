@@ -24,9 +24,20 @@ async function api(path,options={}){
   const data=await response.json().catch(()=>({error:'Respuesta inválida del servidor'}));
   if(!response.ok)throw new Error(data.error||'No se pudo completar la operación');return data;
 }
-function showDashboard(email){$('#loginView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();}
-async function restoreSession(){try{const data=await api('/api/session');if(data.authenticated)showDashboard(data.email);}catch{}}
-$('#loginForm').addEventListener('submit',async event=>{event.preventDefault();const status=$('#loginStatus');status.textContent='Validando…';try{const data=await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});$('#password').value='';status.textContent='';showDashboard(data.email);}catch(error){status.textContent=error.message;}});
+let sessionEmail=null;
+function showDashboard(email){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();}
+function showChangePassword(email){sessionEmail=email;$('#loginView').hidden=true;$('#dashboard').hidden=true;$('#changePasswordView').hidden=false;}
+function enterApp(email,forceChange){forceChange?showChangePassword(email):showDashboard(email);}
+async function restoreSession(){try{const data=await api('/api/session');if(data.authenticated)enterApp(data.email,data.mustChangePassword);}catch{}}
+$('#loginForm').addEventListener('submit',async event=>{event.preventDefault();const status=$('#loginStatus');status.textContent='Validando…';try{const data=await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});$('#password').value='';status.textContent='';enterApp(data.email,data.mustChangePassword);}catch(error){status.textContent=error.message;}});
+$('#changePasswordForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const status=$('#changePasswordStatus'),current=$('#cpCurrent').value,next=$('#cpNew').value,confirm=$('#cpConfirm').value;
+  if(next!==confirm){status.textContent='Las contraseñas nuevas no coinciden.';return;}
+  status.textContent='Guardando…';
+  try{await api('/api/change-password',{method:'POST',body:JSON.stringify({currentPassword:current,newPassword:next})});$('#cpCurrent').value='';$('#cpNew').value='';$('#cpConfirm').value='';status.textContent='';showDashboard(sessionEmail);}
+  catch(error){status.textContent=error.message;}
+});
 $('#logout').addEventListener('click',async()=>{try{await api('/api/logout',{method:'POST',body:'{}'});}finally{location.reload();}});
 
 const drop=$('#dropZone'),fileInput=$('#fileInput');

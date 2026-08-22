@@ -159,7 +159,7 @@ $('#editorForm').addEventListener('submit',async event=>{
 });
 
 (async function init(){
-  try{const session=await api('/api/session');if(!session.authenticated){location.href='index.html';return;}}catch{location.href='index.html';return;}
+  try{const session=await api('/api/session');if(!session.authenticated||session.mustChangePassword){location.href='index.html';return;}}catch{location.href='index.html';return;}
   renderFields();
   await loadExisting();
   fillFields();

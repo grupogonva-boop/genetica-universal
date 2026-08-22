@@ -31,7 +31,17 @@ async function verifyPassword(password,env){
 async function createSession(email,secret){const payload=base64url(new TextEncoder().encode(JSON.stringify({email,exp:Date.now()+8*60*60*1000})));return `${payload}.${base64url(await hmac(payload,secret))}`;}
 async function readSession(request,env){
   const token=cookieValue(request,SESSION_COOKIE);if(!token||!env.SESSION_SECRET)return null;const [payload,signature]=token.split('.');if(!payload||!signature)return null;
-  try{const expected=await hmac(payload,env.SESSION_SECRET),provided=decodeBase64url(signature);if(expected.length!==provided.length||!crypto.subtle.timingSafeEqual(expected,provided))return null;const session=JSON.parse(new TextDecoder().decode(decodeBase64url(payload)));if(session.exp<Date.now()||session.email!==env.ADMIN_EMAIL)return null;return session;}catch{return null;}
+  try{
+    const expected=await hmac(payload,env.SESSION_SECRET),provided=decodeBase64url(signature);if(expected.length!==provided.length||!crypto.subtle.timingSafeEqual(expected,provided))return null;
+    const session=JSON.parse(new TextDecoder().decode(decodeBase64url(payload)));if(session.exp<Date.now())return null;
+    if(session.email!==env.ADMIN_EMAIL){const row=await env.DB.prepare('SELECT 1 FROM admin_users WHERE email=?1').bind(session.email).first();if(!row)return null;}
+    return session;
+  }catch{return null;}
+}
+async function mustChangePassword(email,env){
+  if(email===env.ADMIN_EMAIL)return false;
+  const row=await env.DB.prepare('SELECT must_change_password FROM admin_users WHERE email=?1').bind(email).first();
+  return Boolean(row?.must_change_password);
 }
 async function readJson(request){const length=Number(request.headers.get('content-length')||0);if(!length||length>MAX_BODY_BYTES)throw new Error('Tamaño de solicitud inválido');return request.json();}
 function sameOrigin(request){const origin=request.headers.get('origin');return origin===new URL(request.url).origin;}
@@ -54,14 +64,36 @@ async function handleApi(request,env,url){
   if(url.pathname==='/api/login'&&request.method==='POST'){
     if(await loginLimited(request,env))return json({error:'Demasiados intentos. Espera 15 minutos.'},429);
     if(!env.ADMIN_EMAIL||!env.ADMIN_PASSWORD_HASH||!env.SESSION_SECRET)return json({error:'El administrador todavía no tiene sus secretos configurados.'},503);
-    const body=await readJson(request),email=cleanText(body.email,180).toLowerCase(),password=cleanText(body.password,300);const [validEmail,validPassword]=await Promise.all([secureEqual(email,env.ADMIN_EMAIL.toLowerCase()),verifyPassword(password,env)]);
-    if(!validEmail||!validPassword){await recordLoginFailure(request,env);return json({error:'Correo o contraseña incorrectos'},401);}
-    const session=await createSession(env.ADMIN_EMAIL,env.SESSION_SECRET);return json({email:env.ADMIN_EMAIL},200,{'set-cookie':`${SESSION_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`});
+    const body=await readJson(request),email=cleanText(body.email,180).toLowerCase(),password=cleanText(body.password,300);
+    let authenticatedEmail=null;
+    if(await secureEqual(email,env.ADMIN_EMAIL.toLowerCase())&&await verifyPassword(password,env)){
+      authenticatedEmail=env.ADMIN_EMAIL;
+    }else{
+      const row=await env.DB.prepare('SELECT email,password_hash,password_salt FROM admin_users WHERE email=?1').bind(email).first();
+      if(row&&await secureEqual(await hashPassword(password,row.password_salt),row.password_hash))authenticatedEmail=row.email;
+    }
+    if(!authenticatedEmail){await recordLoginFailure(request,env);return json({error:'Correo o contraseña incorrectos'},401);}
+    const session=await createSession(authenticatedEmail,env.SESSION_SECRET);
+    return json({email:authenticatedEmail,mustChangePassword:await mustChangePassword(authenticatedEmail,env)},200,{'set-cookie':`${SESSION_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`});
   }
   const session=await readSession(request,env);
-  if(url.pathname==='/api/session'&&request.method==='GET')return json(session?{authenticated:true,email:session.email}:{authenticated:false},session?200:401);
+  if(url.pathname==='/api/session'&&request.method==='GET'){
+    if(!session)return json({authenticated:false},401);
+    return json({authenticated:true,email:session.email,mustChangePassword:await mustChangePassword(session.email,env)});
+  }
   if(!session)return json({error:'Sesión vencida. Vuelve a ingresar.'},401);
   if(url.pathname==='/api/logout'&&request.method==='POST')return json({ok:true},200,{'set-cookie':`${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`});
+  if(url.pathname==='/api/change-password'&&request.method==='POST'){
+    const row=await env.DB.prepare('SELECT password_hash,password_salt FROM admin_users WHERE email=?1').bind(session.email).first();
+    if(!row)return json({error:'Esta cuenta no admite cambio de contraseña desde aquí.'},400);
+    const body=await readJson(request),current=cleanText(body.currentPassword,300),next=cleanText(body.newPassword,300);
+    if(next.length<10)return json({error:'La nueva contraseña debe tener al menos 10 caracteres.'},400);
+    if(!await secureEqual(await hashPassword(current,row.password_salt),row.password_hash))return json({error:'La contraseña actual no es correcta.'},401);
+    const saltBytes=crypto.getRandomValues(new Uint8Array(16)),saltHex=[...saltBytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+    const newHash=await hashPassword(next,saltHex);
+    await env.DB.prepare('UPDATE admin_users SET password_hash=?1,password_salt=?2,must_change_password=0,updated_at=?3 WHERE email=?4').bind(newHash,saltHex,new Date().toISOString(),session.email).run();
+    return json({ok:true});
+  }
 
   if(url.pathname==='/api/sires'&&request.method==='GET')return json(await listSires(env));
   if(url.pathname==='/api/sires'&&request.method==='POST'){
