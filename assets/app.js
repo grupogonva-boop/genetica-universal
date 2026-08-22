@@ -85,7 +85,9 @@ document.getElementById('clearFilters').addEventListener('click',()=>{activeF='a
 const nameColumnToggle=document.getElementById('toggleNameColumn');
 nameColumnToggle?.addEventListener('click',()=>{const table=document.querySelector('.sire-table'),collapsed=table.classList.toggle('name-collapsed');nameColumnToggle.setAttribute('aria-expanded',String(!collapsed));nameColumnToggle.setAttribute('aria-label',collapsed?'Expandir la columna del nombre':'Contraer la columna del nombre');nameColumnToggle.title=collapsed?'Expandir nombre del toro':'Contraer nombre del toro';nameColumnToggle.querySelector('span').textContent=collapsed?'›':'‹';});
 document.getElementById('navToggle').addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('show'));
-document.getElementById('themeToggle').addEventListener('click',()=>{const r=document.documentElement;const dark=r.getAttribute('data-theme')==='dark';if(dark){r.removeAttribute('data-theme');}else{r.setAttribute('data-theme','dark');}try{localStorage.setItem('gu-theme',dark?'light':'dark');}catch(e){}});
+function syncDarkHero(){const picture=document.getElementById('heroPictureDark');if(!picture||document.documentElement.getAttribute('data-theme')!=='dark'||picture.dataset.loaded)return;picture.querySelectorAll('[data-theme-srcset]').forEach(source=>source.srcset=source.dataset.themeSrcset);const image=picture.querySelector('[data-theme-src]');if(image)image.src=image.dataset.themeSrc;picture.dataset.loaded='true';}
+syncDarkHero();
+document.getElementById('themeToggle').addEventListener('click',()=>{const r=document.documentElement;const dark=r.getAttribute('data-theme')==='dark';if(dark){r.removeAttribute('data-theme');}else{r.setAttribute('data-theme','dark');syncDarkHero();}try{localStorage.setItem('gu-theme',dark?'light':'dark');}catch(e){}});
 document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>document.getElementById('navLinks').classList.remove('show')));
 document.querySelectorAll('.wa-link').forEach(a=>{a.href=waLink(CONFIG.msgGeneral);a.target="_blank";a.rel="noopener noreferrer";});
 document.querySelectorAll('.wa-genomic').forEach(a=>{a.href=waLink('Hola Genética Universal, me interesa conocer el mapeo genómico por pruebas de ADN para mi establo.');a.target='_blank';a.rel='noopener noreferrer';});
@@ -130,6 +132,15 @@ function renderHero(){
   play();
 }
 renderHero();
+
+/* Profundidad sutil del hero para punteros precisos; sin movimiento en touch o accesibilidad reducida. */
+(function initHeroDepth(){
+  const hero=document.querySelector('.hero-cinematic'),media=document.getElementById('heroMedia');
+  if(!hero||!media||matchMedia('(prefers-reduced-motion: reduce)').matches||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
+  let frame;
+  hero.addEventListener('pointermove',event=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const rect=hero.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width-.5,y=(event.clientY-rect.top)/rect.height-.5;media.style.setProperty('--hero-shift-x',`${x*-14}px`);media.style.setProperty('--hero-shift-y',`${y*-9}px`);});});
+  hero.addEventListener('pointerleave',()=>{cancelAnimationFrame(frame);media.style.setProperty('--hero-shift-x','0px');media.style.setProperty('--hero-shift-y','0px');});
+})();
 
 /* Cuando el administrador esté publicado, D1 sustituye al catálogo local. */
 async function syncRemoteCatalog(){
