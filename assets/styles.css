@@ -401,10 +401,10 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
 .name-column-toggle{display:none}
 @media(max-width:720px){
   .sire-table-wrap{scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;scrollbar-color:var(--red) transparent}
-  .sire-table{width:2391px;min-width:2391px;table-layout:fixed;transition:width .28s ease,min-width .28s ease}
+  .sire-table{width:2391px;min-width:2391px;table-layout:fixed}
   .sire-table.name-collapsed{width:2223px;min-width:2223px}
   .sire-table th,.sire-table td{box-sizing:border-box}
-  .sire-table col.col-name{width:210px;transition:width .28s ease}
+  .sire-table col.col-name{width:210px}
   .sire-table.name-collapsed col.col-name{width:42px}
   .sire-table col:nth-child(2){width:96px}
   .sire-table col:nth-child(3){width:105px}
