@@ -67,6 +67,17 @@ npx wrangler dev
 
 No copies `.dev.vars` a producción ni lo subas al repositorio.
 
+## Invitar usuarios adicionales del panel
+
+El dueño (`ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH`/`ADMIN_PASSWORD_SALT`) sigue autenticado por secretos de Cloudflare. Para invitar a alguien más sin tocar esos secretos, se usa la tabla `admin_users` en D1 — cada fila es una cuenta independiente con su propia contraseña, y `must_change_password=1` obliga a esa persona a capturar su propia contraseña en el primer acceso (el panel bloquea todo lo demás hasta que la cambien).
+
+```bash
+node scripts/hash-admin-password.mjs "contraseña-temporal"
+npx wrangler d1 execute genetica-universal-admin --remote --command="INSERT INTO admin_users(email,password_hash,password_salt,must_change_password,created_at,updated_at) VALUES('correo@ejemplo.com','<hash>','<salt>',1,'2026-01-01T00:00:00.000Z','2026-01-01T00:00:00.000Z');"
+```
+
+Usa la fecha actual en formato ISO para `created_at`/`updated_at` (`node -e "console.log(new Date().toISOString())"`). Para revocar el acceso de alguien: `DELETE FROM admin_users WHERE email='correo@ejemplo.com';` con el mismo comando `d1 execute --remote`.
+
 ## Editor de sementales
 
 `admin/index.html` lista el catálogo completo con acciones **Editar / Eliminar / Restaurar** por semental, más **+ Nuevo semental**. "Eliminar" es un soft-delete (`activo=0`, reversible con "Restaurar"); no borra el registro.
