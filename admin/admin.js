@@ -1,20 +1,65 @@
+const TRAIT_TEMPLATE=[
+  ['Estatura','Baja','Alta'],['Fortaleza','Débil','Fuerte'],['Profundidad corporal','Poco profunda','Profunda'],
+  ['Fortaleza lechera','Costilla cerrada','Costilla abierta'],['Ángulo de grupa','Isquiones altos','Isquiones bajos'],['Ancho de grupa','Angosta','Ancha'],
+  ['Patas vista lateral','Rectas','Curvas'],['Patas vista posterior','Cerradas','Rectas'],['Ángulo de pie','Bajo','Alto'],['Score de patas','Bajo','Alto'],
+  ['Inserción ubre anterior','Débil','Fuerte'],['Altura ubre posterior','Baja','Alta'],['Ancho ubre posterior','Angosta','Ancha'],['Hendidura de ubre','Débil','Fuerte'],
+  ['Profundidad de ubre','Profunda','Poco profunda'],['Colocación pezones','Alejados','Centrados'],['Pezón posterior','Alejados','Centrados'],['Largo de pezones','Cortos','Largos'],
+];
 const FIELDS=[
-  {key:'codigo',label:'Código NAAB / registro',required:true,aliases:['codigo','codigo naab','naab','naab code','code','registro','registration number','reg number']},
-  {key:'nombre',label:'Nombre del semental',required:true,aliases:['nombre','nombre registrado','semental','toro','bull','bull name','name','short name']},
-  {key:'nm',label:'Mérito Neto NM$',aliases:['nm','nm$','net merit','net merit $','merito neto','merito neto usd']},
-  {key:'cm',label:'Mérito Quesero CM$',aliases:['cm','cm$','cheese merit','cheese merit $','merito quesero']},
-  {key:'milk',label:'Leche PTA (lb)',aliases:['leche','milk','pta leche','pta milk','milk lbs']},
-  {key:'fat',label:'Grasa PTA',aliases:['grasa','fat','pta grasa','fat lbs']},
+  {key:'codigo',label:'Código NAAB',required:true,aliases:['codigo','codigo naab','naab','naab code','code','registro','registration number','reg number']},
+  {key:'nombre',label:'Nombre',required:true,aliases:['nombre','semental','toro','bull','bull name','name','short name']},
+  {key:'nombreRegistrado',label:'Nombre registrado',aliases:['nombre registrado','registered name']},
+  {key:'disponibilidad',label:'Presentación',aliases:['presentacion','disponibilidad','availability']},
+  {key:'raza',label:'Raza',aliases:['raza','breed']},
   {key:'beta',label:'Beta caseína',aliases:['beta','beta caseina','beta casein','a2','a2 genotype','a2 genotipo']},
   {key:'kappa',label:'Kappa caseína',aliases:['kappa','kappa caseina','kappa casein','k casein']},
-  {key:'ped',label:'Pedigrí',aliases:['pedigri','pedigree','ped','padre x abuelo']},
-  {key:'foto',label:'URL de fotografía',aliases:['foto','fotografia','photo','image','image url','photo url']},
-  {key:'raza',label:'Raza',aliases:['raza','breed']},
-  {key:'activo',label:'Activo / disponible',aliases:['activo','active','disponible','available','status']},
+  {key:'activo',label:'Activo',aliases:['activo','active','disponible','available','status']},
+  {key:'ped',label:'Pedigrí corto',aliases:['pedigri','pedigree','ped','padre x abuelo']},
+  {key:'sireName',label:'Sire (nombre completo)',aliases:['sire','sire nombre completo','padre']},
+  {key:'damName',label:'Dam (nombre completo)',aliases:['dam','dam nombre completo','madre nombre']},
+  {key:'dam',label:'Madre (texto libre)',aliases:['madre texto libre','madre']},
+  {key:'mgd',label:'Abuela materna (MGD)',aliases:['mgd','abuela materna']},
+  {key:'mgs',label:'Abuelo materno (MGS)',aliases:['mgs','abuelo materno']},
+  {key:'mggs',label:'Bisabuelo materno (MGGS)',aliases:['mggs','bisabuelo materno']},
+  {key:'mggd',label:'Bisabuela materna (MGGD)',aliases:['mggd','bisabuela materna']},
+  {key:'reg',label:'Registro',aliases:['registro','reg']},
+  {key:'dob',label:'Nacimiento',aliases:['nacimiento','dob','fecha de nacimiento','birth date']},
+  {key:'haplotipos',label:'Haplotipos',aliases:['haplotipos','haplotypes']},
+  {key:'aaa',label:'aAa',aliases:['aaa']},
+  {key:'source',label:'Fuente',aliases:['fuente','source']},
+  {key:'sourceUrl',label:'URL de fuente',aliases:['url de fuente','source url']},
+  {key:'foto',label:'URL de foto principal',aliases:['foto','fotografia','photo','image','image url','photo url','url de foto principal']},
+  {key:'fotoAlt',label:'URL de foto (otro ángulo)',aliases:['foto alt','otro angulo','url de foto otro angulo']},
+  {key:'milk',label:'Leche PTA (lb)',aliases:['leche','milk','pta leche','pta milk','milk lbs','leche pta lb']},
+  {key:'milkR',label:'Confiabilidad leche (%)',aliases:['confiabilidad leche','milk r','milkr']},
+  {key:'fat',label:'Grasa PTA',aliases:['grasa','fat','pta grasa','fat lbs','grasa pta']},
+  {key:'fatPct',label:'Grasa %',aliases:['grasa %','fat pct','fat percent']},
+  {key:'protein',label:'Proteína PTA',aliases:['proteina','protein','proteina pta']},
+  {key:'proteinPct',label:'Proteína %',aliases:['proteina %','protein pct']},
+  {key:'tpi',label:'TPI',aliases:['tpi']},
+  {key:'nm',label:'NM$',aliases:['nm','nm$','net merit','net merit $','merito neto','merito neto usd']},
+  {key:'cm',label:'CM$',aliases:['cm','cm$','cheese merit','cheese merit $','merito quesero']},
+  {key:'cfp',label:'CFP',aliases:['cfp']},
+  {key:'feedSaved',label:'Feed Saved',aliases:['feed saved','feedsaved']},
+  {key:'pl',label:'Vida productiva (PL)',aliases:['vida productiva','pl']},
+  {key:'dpr',label:'DPR',aliases:['dpr']},
+  {key:'ccr',label:'CCR',aliases:['ccr']},
+  {key:'sce',label:'SCE',aliases:['sce']},
+  {key:'scs',label:'SCS',aliases:['scs']},
+  {key:'mastitis',label:'Mastitis',aliases:['mastitis']},
+  {key:'fertIndex',label:'Índice de fertilidad',aliases:['indice de fertilidad','fert index']},
+  {key:'livability',label:'Viabilidad',aliases:['viabilidad','livability']},
+  {key:'ptat',label:'PTAT',aliases:['ptat']},
+  {key:'udc',label:'UDC',aliases:['udc']},
+  {key:'flc',label:'FLC',aliases:['flc']},
+  {key:'hcc',label:'HCC',aliases:['hcc']},
+  {key:'sta',label:'STA',aliases:['sta']},
+  ...TRAIT_TEMPLATE.map(([label],i)=>({key:`trait_${i}`,label:`Rasgo: ${label}`,aliases:[label,`rasgo ${label}`]})),
 ];
+const DISPONIBILIDAD_MAP={'sexado':'sex','convencional':'conv','sexado convencional':'conv-sex','sexado + convencional':'conv-sex','super convencional':'s-conv'};
 const state={headers:[],rawRows:[],mapping:{},rows:[],errors:[],file:null};
 const $=selector=>document.querySelector(selector);
-const normalize=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const normalize=value=>String(value??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const cleanNumber=value=>{if(value===''||value==null)return null;const parsed=Number(String(value).replace(/[$,%\s]/g,'').replace(/,/g,''));return Number.isFinite(parsed)?parsed:null;};
 const cleanText=(value,max=220)=>String(value??'').trim().slice(0,max);
 const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -74,7 +119,42 @@ function normalizeRows(){
     if(!codigo)rowErrors.push('Falta código');if(!nombre)rowErrors.push('Falta nombre');if(codigo&&seen.has(codigo))rowErrors.push('Código duplicado');seen.add(codigo);
     const genomic_data={};state.headers.forEach((header,col)=>{if(!used.has(col)&&cleanText(row[col])!=='')genomic_data[header]=cleanText(row[col],500);});
     const activeRaw=normalize(valueAt(row,'activo'));const activo=!['no','false','0','inactivo','inactive','agotado'].includes(activeRaw);
-    const normalized={codigo,nombre,nm:cleanNumber(valueAt(row,'nm')),cm:cleanNumber(valueAt(row,'cm')),milk:cleanNumber(valueAt(row,'milk')),fat:cleanNumber(valueAt(row,'fat')),beta:cleanText(valueAt(row,'beta'),20).toUpperCase(),kappa:cleanText(valueAt(row,'kappa'),20).toUpperCase(),ped:cleanText(valueAt(row,'ped'),240),foto:cleanText(valueAt(row,'foto'),500),raza:cleanText(valueAt(row,'raza'),50)||'Holstein',activo,genomic_data};
+    const disponibilidadRaw=normalize(valueAt(row,'disponibilidad'));const disponibilidad=DISPONIBILIDAD_MAP[disponibilidadRaw]||(['sex','conv','conv-sex','s-conv'].includes(disponibilidadRaw)?disponibilidadRaw:'');
+    const traits=TRAIT_TEMPLATE.map(([label,left,right],i)=>{const value=cleanNumber(valueAt(row,`trait_${i}`))??0;return[label,value,left,right,value<0?left:right];});
+    const normalized={
+      codigo,nombre,
+      nombreRegistrado:cleanText(valueAt(row,'nombreRegistrado'),160),
+      disponibilidad,
+      raza:cleanText(valueAt(row,'raza'),50)||'Holstein',
+      beta:cleanText(valueAt(row,'beta'),20).toUpperCase(),
+      kappa:cleanText(valueAt(row,'kappa'),20).toUpperCase(),
+      activo,
+      ped:cleanText(valueAt(row,'ped'),240),
+      sireName:cleanText(valueAt(row,'sireName'),200),
+      damName:cleanText(valueAt(row,'damName'),200),
+      dam:cleanText(valueAt(row,'dam'),200),
+      mgd:cleanText(valueAt(row,'mgd'),200),
+      mgs:cleanText(valueAt(row,'mgs'),200),
+      mggs:cleanText(valueAt(row,'mggs'),200),
+      mggd:cleanText(valueAt(row,'mggd'),200),
+      reg:cleanText(valueAt(row,'reg'),60),
+      dob:cleanText(valueAt(row,'dob'),20),
+      haplotipos:cleanText(valueAt(row,'haplotipos'),20),
+      aaa:cleanText(valueAt(row,'aaa'),40),
+      source:cleanText(valueAt(row,'source'),120),
+      sourceUrl:cleanText(valueAt(row,'sourceUrl'),500),
+      foto:cleanText(valueAt(row,'foto'),500),
+      fotoAlt:cleanText(valueAt(row,'fotoAlt'),500),
+      milk:cleanNumber(valueAt(row,'milk')),milkR:cleanNumber(valueAt(row,'milkR')),
+      fat:cleanNumber(valueAt(row,'fat')),fatPct:cleanNumber(valueAt(row,'fatPct')),
+      protein:cleanNumber(valueAt(row,'protein')),proteinPct:cleanNumber(valueAt(row,'proteinPct')),
+      tpi:cleanNumber(valueAt(row,'tpi')),
+      nm:cleanNumber(valueAt(row,'nm')),cm:cleanNumber(valueAt(row,'cm')),cfp:cleanNumber(valueAt(row,'cfp')),feedSaved:cleanNumber(valueAt(row,'feedSaved')),
+      pl:cleanNumber(valueAt(row,'pl')),dpr:cleanNumber(valueAt(row,'dpr')),ccr:cleanNumber(valueAt(row,'ccr')),sce:cleanNumber(valueAt(row,'sce')),scs:cleanNumber(valueAt(row,'scs')),
+      mastitis:cleanNumber(valueAt(row,'mastitis')),fertIndex:cleanNumber(valueAt(row,'fertIndex')),livability:cleanNumber(valueAt(row,'livability')),
+      ptat:cleanNumber(valueAt(row,'ptat')),udc:cleanNumber(valueAt(row,'udc')),flc:cleanNumber(valueAt(row,'flc')),hcc:cleanNumber(valueAt(row,'hcc')),sta:cleanNumber(valueAt(row,'sta')),
+      traits,genomic_data,
+    };
     if(rowErrors.length)state.errors.push({row:index+2,errors:rowErrors});return{...normalized,_errors:rowErrors};
   });renderPreview();
 }
@@ -100,5 +180,20 @@ $('#existingRows').addEventListener('click',async event=>{
   if(restore){const codigo=restore.dataset.restore;try{await api(`/api/sires/${encodeURIComponent(codigo)}/restore`,{method:'POST',body:'{}'});await loadCatalog();}catch(error){alert(error.message);}}
 });
 $('#refresh').addEventListener('click',loadCatalog);
-$('#downloadTemplate').addEventListener('click',()=>{const headers=['Código NAAB','Nombre','NM$','CM$','Leche PTA','Grasa PTA','Beta caseína','Kappa caseína','Pedigrí','URL fotografía','Raza','Activo','TPI','DPR','SCS','Vida productiva'];const example=['100HO12366','MAXWELL',955,992,1293,93,'A2/A2','BB','Undertone × Upside × Captain','','Holstein','Sí',3000,1.2,2.68,5.4];const book=XLSX.utils.book_new(),sheet=XLSX.utils.aoa_to_sheet([headers,example]);XLSX.utils.book_append_sheet(book,sheet,'Sementales');XLSX.writeFile(book,'plantilla-sementales-genetica-universal.xlsx');});
+$('#downloadTemplate').addEventListener('click',()=>{
+  const headers=FIELDS.map(field=>field.label);
+  const exampleByKey={
+    codigo:'100HO12366',nombre:'MAXWELL',nombreRegistrado:'Maxwell-ET',disponibilidad:'Sexado',raza:'Holstein',beta:'A2/A2',kappa:'BB',activo:'Sí',
+    ped:'Undertone × Upside × Captain',sireName:'Peak Undertone-ET',damName:'Peak Upside-ET',dam:'Peak Upside-ET VG-86',
+    mgd:'Peak Captain Dam-ET',mgs:'Peak Captain-ET',mggs:'Peak Sire Ancestro-ET',mggd:'Peak Dam Ancestro-ET',
+    reg:'US123456789',dob:'03/2024',haplotipos:'HH1F',aaa:'1-2-6-4-5',source:'Catálogo oficial',sourceUrl:'',
+    foto:'',fotoAlt:'',
+    milk:1293,milkR:82,fat:93,fatPct:0.15,protein:60,proteinPct:0.08,tpi:3000,
+    nm:955,cm:992,cfp:85,feedSaved:104,
+    pl:5.4,dpr:1.2,ccr:1.5,sce:1.7,scs:2.68,mastitis:-0.4,fertIndex:0.1,livability:-1.6,
+    ptat:0.99,udc:0.74,flc:0.09,hcc:1.38,sta:0.56,
+  };
+  const example=FIELDS.map(field=>field.key.startsWith('trait_')?0:(exampleByKey[field.key]??''));
+  const book=XLSX.utils.book_new(),sheet=XLSX.utils.aoa_to_sheet([headers,example]);XLSX.utils.book_append_sheet(book,sheet,'Sementales');XLSX.writeFile(book,'plantilla-sementales-genetica-universal.xlsx');
+});
 restoreSession();

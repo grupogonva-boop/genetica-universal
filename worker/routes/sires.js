@@ -59,6 +59,35 @@ export async function updateSire(env, session, codigoParam, body) {
   return getSire(env, codigoParam);
 }
 
+// Columnas editables por carga masiva (Excel). Se excluyen ancestors_json y
+// ficha_pdf_url a propósito: esos solo se suben con archivo real desde el
+// editor de un semental, así que la carga masiva nunca debe pisarlos.
+const BULK_COLUMNS = COLUMNS.filter((c) => c !== 'ancestors_json' && c !== 'ficha_pdf_url');
+
+export async function bulkUpsertSires(env, session, rows) {
+  const seen = new Set();
+  const cleanedRows = [];
+  rows.forEach((input, index) => {
+    let cleaned;
+    try { cleaned = cleanFieldSet(input); } catch (error) { const err = new Error(`Fila ${index + 1}: ${error.message}`); err.status = 400; throw err; }
+    if (seen.has(cleaned.codigo)) { const err = new Error(`Código duplicado: ${cleaned.codigo}`); err.status = 400; throw err; }
+    seen.add(cleaned.codigo);
+    cleanedRows.push(cleaned);
+  });
+  const now = new Date().toISOString();
+  const cols = [...BULK_COLUMNS, 'updated_at', 'updated_by'];
+  const setCols = cols.filter((c) => c !== 'codigo');
+  const sql = `INSERT INTO sires(${cols.join(',')}) VALUES(${cols.map((_, i) => `?${i + 1}`).join(',')}) ON CONFLICT(codigo) DO UPDATE SET ${setCols.map((c) => `${c}=excluded.${c}`).join(',')}`;
+  for (let offset = 0; offset < cleanedRows.length; offset += 50) {
+    const statements = cleanedRows.slice(offset, offset + 50).map((row) => {
+      const values = { ...row, updated_at: now, updated_by: session.email };
+      return env.DB.prepare(sql).bind(...cols.map((c) => values[c] ?? null));
+    });
+    await env.DB.batch(statements);
+  }
+  return cleanedRows.length;
+}
+
 export async function setSireActive(env, codigo, activo) {
   const existing = await env.DB.prepare('SELECT 1 FROM sires WHERE codigo=?1').bind(codigo).first();
   if (!existing) { const err = new Error('Ese semental no existe.'); err.status = 404; throw err; }

@@ -1,5 +1,5 @@
-import { cleanText, cleanDataText, cleanNumber, cleanImageUrl, cleanGenomicData } from './lib/validation.js';
-import { publicSires, listSires, getSire, createSire, updateSire, setSireActive } from './routes/sires.js';
+import { cleanText, cleanDataText } from './lib/validation.js';
+import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, bulkUpsertSires } from './routes/sires.js';
 import { handleUpload } from './routes/upload.js';
 
 const SESSION_COOKIE='gu_admin_session';
@@ -117,12 +117,17 @@ async function handleApi(request,env,url){
 
   if(url.pathname==='/api/import'&&request.method==='POST'){
     const body=await readJson(request);if(!Array.isArray(body.rows)||!body.rows.length||body.rows.length>MAX_ROWS)return json({error:`La carga debe contener entre 1 y ${MAX_ROWS} filas.`},400);
-    const rows=[],seen=new Set();for(const input of body.rows){const codigo=cleanDataText(input.codigo,60).toUpperCase(),nombre=cleanDataText(input.nombre,120).toUpperCase();if(!codigo||!nombre)return json({error:'Cada fila necesita código y nombre.'},400);if(seen.has(codigo))return json({error:`Código duplicado: ${codigo}`},400);seen.add(codigo);rows.push({codigo,nombre,nm:cleanNumber(input.nm),cm:cleanNumber(input.cm),milk:cleanNumber(input.milk),fat:cleanNumber(input.fat),beta:cleanDataText(input.beta,20).toUpperCase(),kappa:cleanDataText(input.kappa,20).toUpperCase(),ped:cleanDataText(input.ped,240),foto:cleanImageUrl(input.foto),raza:cleanDataText(input.raza,50)||'Holstein',activo:input.activo===false?0:1,genomic:JSON.stringify(cleanGenomicData(input.genomic_data))});}
     const importId=crypto.randomUUID(),createdAt=new Date().toISOString(),filename=cleanDataText(body.filename,180),sheet=cleanDataText(body.sheet,120);
-    await env.DB.prepare("INSERT INTO import_batches(id,filename,sheet_name,row_count,status,created_by,created_at) VALUES(?1,?2,?3,?4,'processing',?5,?6)").bind(importId,filename,sheet,rows.length,session.email,createdAt).run();
-    const sql=`INSERT INTO sires(codigo,nombre,nm,cm,milk,fat,beta,kappa,ped,foto,raza,activo,genomic_json,import_id,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15) ON CONFLICT(codigo) DO UPDATE SET nombre=excluded.nombre,nm=excluded.nm,cm=excluded.cm,milk=excluded.milk,fat=excluded.fat,beta=excluded.beta,kappa=excluded.kappa,ped=excluded.ped,foto=excluded.foto,raza=excluded.raza,activo=excluded.activo,genomic_json=excluded.genomic_json,import_id=excluded.import_id,updated_at=excluded.updated_at`;
-    try{for(let offset=0;offset<rows.length;offset+=50){const statements=rows.slice(offset,offset+50).map(row=>env.DB.prepare(sql).bind(row.codigo,row.nombre,row.nm,row.cm,row.milk,row.fat,row.beta,row.kappa,row.ped,row.foto,row.raza,row.activo,row.genomic,importId,createdAt));await env.DB.batch(statements);}await env.DB.prepare("UPDATE import_batches SET status='completed' WHERE id=?1").bind(importId).run();}catch(error){await env.DB.prepare("UPDATE import_batches SET status='failed' WHERE id=?1").bind(importId).run();throw error;}
-    console.log(JSON.stringify({message:'catalog import completed',importId,rows:rows.length,email:session.email}));return json({imported:rows.length,importId});
+    await env.DB.prepare("INSERT INTO import_batches(id,filename,sheet_name,row_count,status,created_by,created_at) VALUES(?1,?2,?3,?4,'processing',?5,?6)").bind(importId,filename,sheet,body.rows.length,session.email,createdAt).run();
+    try{
+      const imported=await bulkUpsertSires(env,session,body.rows);
+      await env.DB.prepare("UPDATE import_batches SET status='completed' WHERE id=?1").bind(importId).run();
+      console.log(JSON.stringify({message:'catalog import completed',importId,rows:imported,email:session.email}));
+      return json({imported,importId});
+    }catch(error){
+      await env.DB.prepare("UPDATE import_batches SET status='failed' WHERE id=?1").bind(importId).run();
+      return json({error:error.message},error.status||400);
+    }
   }
   return json({error:'Ruta no encontrada'},404);
 }
