@@ -38,8 +38,8 @@
 
       <div class="workspace">
         <section class="panel upload-panel">
-          <div class="panel-title"><span>01</span><div><h2>Selecciona el archivo</h2><p>.xlsx, .xls o .csv · máximo 500 filas</p></div><button class="text-btn" id="downloadTemplate">Descargar plantilla</button></div>
-          <label class="drop-zone" id="dropZone"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><span class="drop-icon">⇧</span><b>Arrastra tu Excel aquí</b><small>o haz clic para buscarlo</small></label>
+          <div class="panel-title"><span>01</span><div><h2>Selecciona el archivo</h2><p>.xlsx, .xls, .csv o el PDF del catálogo · máximo 500 filas</p></div><button class="text-btn" id="downloadTemplate">Descargar plantilla</button></div>
+          <label class="drop-zone" id="dropZone"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.pdf"><span class="drop-icon">⇧</span><b>Arrastra tu Excel o el PDF del catálogo aquí</b><small>o haz clic para buscarlo</small></label>
           <div class="file-chip" id="fileChip" hidden><span>✓</span><div><b id="fileName"></b><small id="fileMeta"></small></div><button id="removeFile" aria-label="Quitar archivo">×</button></div>
         </section>
 
@@ -51,6 +51,7 @@
         <section class="panel" id="previewPanel" hidden>
           <div class="panel-title"><span>03</span><div><h2>Revisa antes de publicar</h2><p id="validationSummary">Sin procesar</p></div></div>
           <div class="alert" id="validationAlert" hidden></div>
+          <div class="alert alert-warn" id="validationWarnings" hidden></div>
           <div class="preview-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>NM$</th><th>CM$</th><th>Leche</th><th>Beta</th><th>Kappa</th><th>Estado</th></tr></thead><tbody id="previewRows"></tbody></table></div>
           <div class="publish-row"><p>Las columnas adicionales se conservarán en el expediente genómico 360°.</p><button id="publish" disabled>Publicar catálogo <span>→</span></button></div>
           <div class="form-status" id="publishStatus" role="status"></div>
@@ -72,6 +73,7 @@
   </main>
   <footer>Genética Universal × GONVAX · Administración de datos genómicos</footer>
   <script src="vendor/xlsx.full.min.js"></script>
+  <script type="module" src="pdf-import.js"></script>
   <script src="admin.js" defer></script>
 </body>
 </html>

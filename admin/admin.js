@@ -57,7 +57,7 @@ const FIELDS=[
   ...TRAIT_TEMPLATE.map(([label],i)=>({key:`trait_${i}`,label:`Rasgo: ${label}`,aliases:[label,`rasgo ${label}`]})),
 ];
 const DISPONIBILIDAD_MAP={'sexado':'sex','convencional':'conv','sexado convencional':'conv-sex','sexado + convencional':'conv-sex','super convencional':'s-conv'};
-const state={headers:[],rawRows:[],mapping:{},rows:[],errors:[],file:null};
+const state={headers:[],rawRows:[],mapping:{},rows:[],errors:[],warnings:[],file:null,mode:'excel'};
 const $=selector=>document.querySelector(selector);
 const normalize=value=>String(value??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const cleanNumber=value=>{if(value===''||value==null)return null;const parsed=Number(String(value).replace(/[$,%\s]/g,'').replace(/,/g,''));return Number.isFinite(parsed)?parsed:null;};
@@ -88,15 +88,43 @@ $('#logout').addEventListener('click',async()=>{try{await api('/api/logout',{met
 const drop=$('#dropZone'),fileInput=$('#fileInput');
 ['dragenter','dragover'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.add('drag');}));
 ['dragleave','drop'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.remove('drag');}));
-drop.addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file)readWorkbook(file);});
-fileInput.addEventListener('change',()=>{if(fileInput.files[0])readWorkbook(fileInput.files[0]);});
+drop.addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file)handleFile(file);});
+fileInput.addEventListener('change',()=>{if(fileInput.files[0])handleFile(fileInput.files[0]);});
 $('#removeFile').addEventListener('click',resetFile);
+
+function handleFile(file){
+  if(/\.pdf$/i.test(file.name))return readCatalogPdf(file);
+  return readWorkbook(file);
+}
+
+async function readCatalogPdf(file){
+  const status=$('#publishStatus');status.textContent='';
+  if(file.size>25*1024*1024){status.textContent='El PDF supera el máximo de 25 MB.';return;}
+  if(!window.PDFImport){status.textContent='El lector de PDF no cargó, recarga la página e intenta de nuevo.';return;}
+  status.textContent='Leyendo el PDF del catálogo…';
+  try{
+    const parsed=await window.PDFImport.parseCatalogPdf(file,(done,total)=>{status.textContent=`Leyendo el PDF del catálogo… (${done}/${total})`;});
+    state.mode='pdf';state.file={name:file.name,size:file.size,sheet:null};state.headers=[];state.rawRows=[];state.mapping={};
+    state.errors=[];state.warnings=[];
+    state.rows=parsed.map((row,index)=>{
+      const {_errors,_warnings,_page,...data}=row;
+      if(_errors.length)state.errors.push({row:_page,errors:_errors});
+      if(_warnings.length)state.warnings.push({row:_page,codigo:data.codigo,nombre:data.nombre,warnings:_warnings});
+      return{...data,_errors};
+    });
+    status.textContent='';
+    $('#fileName').textContent=file.name;$('#fileMeta').textContent=`${state.rows.length} sementales · leídos del PDF · ${(file.size/1024/1024).toFixed(1)} MB`;
+    $('#fileChip').hidden=false;drop.hidden=true;$('#mappingPanel').hidden=true;$('#previewPanel').hidden=false;
+    renderPreview();
+  }catch(error){status.textContent=error.message||'No fue posible leer el PDF.';}
+}
 
 async function readWorkbook(file){
   const status=$('#publishStatus');status.textContent='';
-  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){status.textContent='Usa un archivo .xlsx, .xls o .csv.';return;}
+  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){status.textContent='Usa un archivo .xlsx, .xls, .csv o el PDF del catálogo.';return;}
   if(file.size>8*1024*1024){status.textContent='El archivo supera el máximo de 8 MB.';return;}
   try{
+    state.mode='excel';
     const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
     const sheetName=workbook.SheetNames[0],matrix=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,defval:'',raw:false});
     if(matrix.length<2)throw new Error('La primera hoja no contiene filas de datos.');
@@ -159,12 +187,24 @@ function normalizeRows(){
   });renderPreview();
 }
 function renderPreview(){
-  const valid=state.rows.length-state.errors.length;$('#validationSummary').textContent=`${state.rows.length} filas · ${valid} listas · ${state.errors.length} con observaciones`;
-  const alert=$('#validationAlert');alert.hidden=!state.errors.length;alert.textContent=state.errors.length?state.errors.slice(0,5).map(item=>`Fila ${item.row}: ${item.errors.join(', ')}`).join(' · '):'';
-  $('#previewRows').innerHTML=state.rows.slice(0,12).map(row=>`<tr><td>${escapeHtml(row.codigo||'—')}</td><td>${escapeHtml(row.nombre||'—')}</td><td>${row.nm??'—'}</td><td>${row.cm??'—'}</td><td>${row.milk??'—'}</td><td>${escapeHtml(row.beta||'—')}</td><td>${escapeHtml(row.kappa||'—')}</td><td class="${row._errors.length?'bad':'ok'}">${row._errors.length?'Revisar':'Listo'}</td></tr>`).join('');
+  const valid=state.rows.length-state.errors.length;
+  const warnLabel=state.mode==='pdf'&&state.warnings.length?` · ${state.warnings.length} con campos sin detectar`:'';
+  $('#validationSummary').textContent=`${state.rows.length} ${state.mode==='pdf'?'sementales':'filas'} · ${valid} listos · ${state.errors.length} con observaciones${warnLabel}`;
+  const alert=$('#validationAlert');alert.hidden=!state.errors.length;alert.textContent=state.errors.length?state.errors.slice(0,5).map(item=>`Fila/página ${item.row}: ${item.errors.join(', ')}`).join(' · '):'';
+  const warnBox=$('#validationWarnings');
+  if(state.mode==='pdf'&&state.warnings.length){
+    warnBox.hidden=false;
+    warnBox.innerHTML=`No se pudieron leer estos campos directamente del PDF (revísalos manualmente en el editor antes de confiar en ellos):<br>`+state.warnings.map(item=>`<b>${escapeHtml(item.codigo||`página ${item.row}`)} ${escapeHtml(item.nombre||'')}</b>: ${item.warnings.join(', ')}`).join('<br>');
+  }else{warnBox.hidden=true;warnBox.textContent='';}
+  $('#previewRows').innerHTML=state.rows.slice(0,12).map(row=>{
+    const hasWarn=state.mode==='pdf'&&state.warnings.some(w=>w.codigo===row.codigo);
+    const cls=row._errors.length?'bad':(hasWarn?'warn':'ok');
+    const label=row._errors.length?'Revisar':(hasWarn?'Con avisos':'Listo');
+    return`<tr><td>${escapeHtml(row.codigo||'—')}</td><td>${escapeHtml(row.nombre||'—')}</td><td>${row.nm??'—'}</td><td>${row.cm??'—'}</td><td>${row.milk??'—'}</td><td>${escapeHtml(row.beta||'—')}</td><td>${escapeHtml(row.kappa||'—')}</td><td class="${cls}">${label}</td></tr>`;
+  }).join('');
   $('#publish').disabled=!state.rows.length||state.errors.length>0;
 }
-function resetFile(){state.headers=[];state.rawRows=[];state.mapping={};state.rows=[];state.errors=[];state.file=null;fileInput.value='';drop.hidden=false;$('#fileChip').hidden=true;$('#mappingPanel').hidden=true;$('#previewPanel').hidden=true;}
+function resetFile(){state.headers=[];state.rawRows=[];state.mapping={};state.rows=[];state.errors=[];state.warnings=[];state.file=null;state.mode='excel';fileInput.value='';drop.hidden=false;$('#fileChip').hidden=true;$('#mappingPanel').hidden=true;$('#previewPanel').hidden=true;$('#validationWarnings').hidden=true;}
 $('#publish').addEventListener('click',async()=>{const button=$('#publish'),status=$('#publishStatus');button.disabled=true;status.textContent='Guardando el catálogo…';try{const rows=state.rows.map(({_errors,...row})=>row);const data=await api('/api/import',{method:'POST',body:JSON.stringify({filename:state.file.name,sheet:state.file.sheet,rows})});status.textContent=`✓ ${data.imported} sementales guardados correctamente.`;await loadCatalog();}catch(error){status.textContent=error.message;button.disabled=false;}});
 let catalogRows=[],catalogSearch='';
 async function loadCatalog(){try{const data=await api('/api/sires');catalogRows=data.sires||[];$('#totalSires').textContent=catalogRows.length;$('#activeSires').textContent=catalogRows.filter(row=>row.activo).length;$('#a2Sires').textContent=catalogRows.filter(row=>row.beta==='A2/A2').length;$('#lastImport').textContent=data.lastImport?new Date(data.lastImport).toLocaleDateString('es-MX'):'—';renderCatalogRows();}catch(error){$('#existingRows').innerHTML=`<tr><td colspan="8" class="empty">${escapeHtml(error.message)}</td></tr>`;}}
