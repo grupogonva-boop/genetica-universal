@@ -53,7 +53,7 @@ const TRAIT_TEMPLATE=[
 
 const params=new URLSearchParams(location.search);
 const editCodigo=(params.get('codigo')||'').trim().toUpperCase();
-let sire={activo:true,ancestors:[],traits:TRAIT_TEMPLATE.map(([label,left,right])=>[label,0,left,right,right])};
+let sire={activo:true,ancestors:[],fotosExtra:[],traits:TRAIT_TEMPLATE.map(([label,left,right])=>[label,0,left,right,right])};
 
 function renderFields(){
   for(const [containerId,fields] of Object.entries(SECTIONS)){
@@ -90,6 +90,27 @@ async function handleAncestorUpload(index,file){
 }
 $('#addAncestor').addEventListener('click',()=>{sire.ancestors.push({relation:'',name:'',foto:''});renderAncestors();});
 
+function renderExtraFotos(){
+  $('#extraFotosList').innerHTML=sire.fotosExtra.map((foto,i)=>`<div class="ancestor-row" data-i="${i}" style="grid-template-columns:110px 1fr auto">
+    <label class="mini-drop${foto?' has-img':''}" data-extra="${i}">${foto?`<img src="${foto}" alt="">`:''}<input type="file" accept="image/jpeg,image/png,image/webp"><span>Foto</span></label>
+    <span style="color:#707583;font-size:.72rem">${foto?'Cargada':'Sin subir todavía'}</span>
+    <button type="button" class="remove-ancestor" data-remove-extra="${i}" aria-label="Quitar">×</button>
+  </div>`).join('')||'<p style="color:#707583;font-size:.72rem">Sin fotos adicionales.</p>';
+  document.querySelectorAll('[data-remove-extra]').forEach(btn=>btn.addEventListener('click',()=>{sire.fotosExtra.splice(Number(btn.dataset.removeExtra),1);renderExtraFotos();refreshPreview();}));
+  document.querySelectorAll('[data-extra]').forEach(drop=>{
+    const input=drop.querySelector('input');
+    input.addEventListener('change',async()=>{const file=input.files[0];if(!file)return;await handleExtraUpload(Number(drop.dataset.extra),file);});
+  });
+}
+async function handleExtraUpload(index,file){
+  const codigo=(sire.codigo||'').toUpperCase();
+  if(!/^[A-Z0-9]{3,20}$/.test(codigo)){$('#editorStatus').textContent='Escribe primero un código NAAB válido antes de subir fotos.';return;}
+  $('#editorStatus').textContent='Subiendo fotografía…';
+  try{const {url}=await upload(codigo,'extra',file);sire.fotosExtra[index]=url;renderExtraFotos();refreshPreview();$('#editorStatus').textContent='';}
+  catch(error){$('#editorStatus').textContent=error.message;}
+}
+$('#addExtraFoto').addEventListener('click',()=>{sire.fotosExtra.push('');renderExtraFotos();});
+
 function renderTraits(){
   $('#traitsGrid').innerHTML=sire.traits.map((trait,i)=>`<div class="trait-row"><label>${escapeHtml(trait[0])} <small style="color:#686d79">(${trait[2]} → ${trait[3]})</small></label><input type="number" step="0.01" data-trait="${i}" value="${trait[1]}"></div>`).join('');
   document.querySelectorAll('[data-trait]').forEach(input=>input.addEventListener('input',()=>{const i=Number(input.dataset.trait),value=input.value===''?0:Number(input.value);sire.traits[i][1]=value;sire.traits[i][4]=value<0?sire.traits[i][2]:sire.traits[i][3];refreshPreview();}));
@@ -118,23 +139,22 @@ function paintDropzone(drop,slot,url){
   drop.querySelectorAll('img').forEach(img=>img.remove());
   const span=drop.querySelector('span'),removeBtn=drop.querySelector('.mini-drop-remove');
   if(removeBtn)removeBtn.hidden=!url;
-  if(url&&slot!=='ficha'){drop.classList.add('has-img');const img=document.createElement('img');img.src=url;drop.insertBefore(img,drop.firstChild);span.textContent=slot==='main'?'Foto principal':'Otro ángulo';}
+  if(url&&slot!=='ficha'){drop.classList.add('has-img');const img=document.createElement('img');img.src=url;drop.insertBefore(img,drop.firstChild);span.textContent='Foto principal';}
   else if(url&&slot==='ficha'){drop.classList.remove('has-img');span.textContent='PDF cargado ✓';}
-  else{drop.classList.remove('has-img');span.textContent=slot==='main'?'Foto principal':slot==='alt'?'Otro ángulo':'Ficha PDF';}
+  else{drop.classList.remove('has-img');span.textContent=slot==='main'?'Foto principal':'Ficha PDF';}
 }
 
 const paintMain=setupDropzone('#dropMain','main',()=>sire.foto,url=>sire.foto=url);
-const paintAlt=setupDropzone('#dropAlt','alt',()=>sire.fotoAlt,url=>sire.fotoAlt=url);
 const paintFicha=setupDropzone('#dropFicha','ficha',()=>sire.fichaPdfUrl,url=>sire.fichaPdfUrl=url);
 
 const PLACEHOLDER_PHOTO="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="220"><rect width="300" height="220" fill="#dce8e4"/><text x="150" y="115" font-family="sans-serif" font-size="14" fill="#888" text-anchor="middle">Sin fotografía</text></svg>');
 function refreshPreview(){
-  const t={...sire,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),foto:sire.foto||PLACEHOLDER_PHOTO,nm:sire.nm??0,milk:sire.milk??0,fat:sire.fat??0,cm:sire.cm??0,cfp:sire.cfp??0,milkR:sire.milkR??0,pl:sire.pl??0,livability:sire.livability??0,scs:sire.scs??0,fertIndex:sire.fertIndex??0,mastitis:sire.mastitis??0,dpr:sire.dpr??0,fatPct:sire.fatPct??0,proteinPct:sire.proteinPct??0,protein:sire.protein??0,feedSaved:sire.feedSaved??0,ptat:sire.ptat??0,udc:sire.udc??0,flc:sire.flc??0,hcc:sire.hcc??0,tpi:sire.tpi??0,codigo:sire.codigo||'—',nombre:sire.nombre||'Nuevo semental',reg:sire.reg||'—',dob:sire.dob||'—',disponibilidad:sire.disponibilidad||''};
+  const t={...sire,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),fotosExtra:sire.fotosExtra.filter(Boolean),foto:sire.foto||PLACEHOLDER_PHOTO,nm:sire.nm??0,milk:sire.milk??0,fat:sire.fat??0,cm:sire.cm??0,cfp:sire.cfp??0,milkR:sire.milkR??0,pl:sire.pl??0,livability:sire.livability??0,scs:sire.scs??0,fertIndex:sire.fertIndex??0,mastitis:sire.mastitis??0,dpr:sire.dpr??0,fatPct:sire.fatPct??0,proteinPct:sire.proteinPct??0,protein:sire.protein??0,feedSaved:sire.feedSaved??0,ptat:sire.ptat??0,udc:sire.udc??0,flc:sire.flc??0,hcc:sire.hcc??0,tpi:sire.tpi??0,codigo:sire.codigo||'—',nombre:sire.nombre||'Nuevo semental',reg:sire.reg||'—',dob:sire.dob||'—',disponibilidad:sire.disponibilidad||''};
   $('#fichaPreview').innerHTML=window.FichaRender.renderFichaHTML(t,{});
 }
 
 function collectPayload(){
-  return{...sire,activo:$('#activoCheck').checked,traits:sire.traits,ancestors:sire.ancestors.filter(a=>a.name&&a.foto)};
+  return{...sire,activo:$('#activoCheck').checked,traits:sire.traits,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),fotosExtra:sire.fotosExtra.filter(Boolean)};
 }
 
 async function loadExisting(){
@@ -142,7 +162,7 @@ async function loadExisting(){
   $('#editorEyebrow').textContent='EDITAR SEMENTAL';$('#editorHeading').textContent=`Editando ${editCodigo}`;$('#editorTitle').textContent=`Editar ${editCodigo} · Genética Universal`;
   try{
     const data=await api(`/api/sires/${encodeURIComponent(editCodigo)}`);
-    sire={...sire,...data,traits:data.traits?.length?data.traits:sire.traits,ancestors:data.ancestors||[]};
+    sire={...sire,...data,traits:data.traits?.length?data.traits:sire.traits,ancestors:data.ancestors||[],fotosExtra:data.fotosExtra||[]};
   }catch(error){$('#editorStatus').textContent=error.message;}
 }
 
@@ -164,7 +184,8 @@ $('#editorForm').addEventListener('submit',async event=>{
   await loadExisting();
   fillFields();
   renderAncestors();
+  renderExtraFotos();
   renderTraits();
-  paintMain();paintAlt();paintFicha();
+  paintMain();paintFicha();
   refreshPreview();
 })();

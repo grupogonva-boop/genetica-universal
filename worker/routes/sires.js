@@ -3,14 +3,14 @@ import { cleanFieldSet } from '../lib/validation.js';
 // Convierte una fila cruda de D1 (columnas planas + *_json en texto) a la
 // forma que consume tanto el sitio público como el editor del panel.
 function shapeRow(row) {
-  const { traits_json, ancestors_json, foto_alt, ficha_pdf_url, genomic_json, activo, ...rest } = row;
+  const { traits_json, ancestors_json, fotos_extra_json, foto_alt, ficha_pdf_url, genomic_json, activo, ...rest } = row;
   return {
     ...rest,
     activo: Boolean(activo),
-    fotoAlt: foto_alt || null,
     fichaPdfUrl: ficha_pdf_url || null,
     traits: traits_json ? JSON.parse(traits_json) : [],
     ancestors: ancestors_json ? JSON.parse(ancestors_json) : [],
+    fotosExtra: fotos_extra_json ? JSON.parse(fotos_extra_json) : (foto_alt ? [foto_alt] : []),
     genomic_data: genomic_json ? JSON.parse(genomic_json) : {},
   };
 }
@@ -33,7 +33,7 @@ export async function getSire(env, codigo) {
   return row ? shapeRow(row) : null;
 }
 
-const COLUMNS = ['codigo', 'nombre', 'disponibilidad', 'nm', 'cm', 'milk', 'fat', 'ccr', 'cfp', 'dpr', 'fatPct', 'feedSaved', 'fertIndex', 'flc', 'hcc', 'livability', 'mastitis', 'milkR', 'pl', 'protein', 'proteinPct', 'ptat', 'sce', 'scs', 'sta', 'tpi', 'udc', 'aaa', 'dam', 'damName', 'dob', 'haplotipos', 'mgd', 'mgs', 'mggs', 'mggd', 'nombreRegistrado', 'reg', 'sireName', 'source', 'sourceUrl', 'beta', 'kappa', 'ped', 'raza', 'foto', 'foto_alt', 'traits_json', 'ancestors_json', 'ficha_pdf_url', 'activo', 'genomic_json'];
+const COLUMNS = ['codigo', 'nombre', 'disponibilidad', 'nm', 'cm', 'milk', 'fat', 'ccr', 'cfp', 'dpr', 'fatPct', 'feedSaved', 'fertIndex', 'flc', 'hcc', 'livability', 'mastitis', 'milkR', 'pl', 'protein', 'proteinPct', 'ptat', 'sce', 'scs', 'sta', 'tpi', 'udc', 'aaa', 'dam', 'damName', 'dob', 'haplotipos', 'mgd', 'mgs', 'mggs', 'mggd', 'nombreRegistrado', 'reg', 'sireName', 'source', 'sourceUrl', 'beta', 'kappa', 'ped', 'raza', 'foto', 'traits_json', 'ancestors_json', 'fotos_extra_json', 'ficha_pdf_url', 'activo', 'genomic_json'];
 
 export async function createSire(env, session, body) {
   const row = cleanFieldSet(body);
@@ -59,10 +59,11 @@ export async function updateSire(env, session, codigoParam, body) {
   return getSire(env, codigoParam);
 }
 
-// Columnas editables por carga masiva (Excel). Se excluyen ancestors_json y
-// ficha_pdf_url a propósito: esos solo se suben con archivo real desde el
-// editor de un semental, así que la carga masiva nunca debe pisarlos.
-const BULK_COLUMNS = COLUMNS.filter((c) => c !== 'ancestors_json' && c !== 'ficha_pdf_url');
+// Columnas editables por carga masiva (Excel). Se excluyen ancestors_json,
+// fotos_extra_json y ficha_pdf_url a propósito: esos solo se suben con
+// archivo real desde el editor de un semental, así que la carga masiva
+// nunca debe pisarlos.
+const BULK_COLUMNS = COLUMNS.filter((c) => !['ancestors_json', 'fotos_extra_json', 'ficha_pdf_url'].includes(c));
 
 export async function bulkUpsertSires(env, session, rows) {
   const seen = new Set();

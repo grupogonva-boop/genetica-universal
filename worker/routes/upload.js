@@ -1,6 +1,6 @@
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
-const SLOTS = new Set(['main', 'alt', 'ancestor', 'ficha']);
+const SLOTS = new Set(['main', 'extra', 'ancestor', 'ficha']);
 const PUBLIC_MEDIA_BASE = 'https://media.geneticauniversal.com/';
 
 // Detecta el tipo real por los primeros bytes del archivo — no confiamos en

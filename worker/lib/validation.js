@@ -35,6 +35,12 @@ export function cleanAncestors(value) {
   })).filter((item) => item.name && item.foto);
 }
 
+const EXTRA_FOTOS_MAX = 12;
+export function cleanExtraFotos(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, EXTRA_FOTOS_MAX).map((item) => cleanImageUrl(item)).filter(Boolean);
+}
+
 const TRAITS_MAX = 18;
 export function cleanTraits(value) {
   if (!Array.isArray(value)) return [];
@@ -64,11 +70,11 @@ export function cleanFieldSet(body) {
   for (const field of NUMERIC_FIELDS) row[field] = cleanNumber(body[field]);
   for (const [field, max] of Object.entries(TEXT_FIELDS)) row[field] = cleanText(body[field], max) || null;
   row.foto = cleanImageUrl(body.foto) || null;
-  row.foto_alt = cleanImageUrl(body.fotoAlt ?? body.foto_alt) || null;
   row.raza = row.raza || 'Holstein';
   row.activo = body.activo === false ? 0 : 1;
   row.traits_json = JSON.stringify(cleanTraits(body.traits));
   row.ancestors_json = JSON.stringify(cleanAncestors(body.ancestors));
+  row.fotos_extra_json = JSON.stringify(cleanExtraFotos(body.fotosExtra));
   row.ficha_pdf_url = cleanImageUrl(body.fichaPdfUrl ?? body.ficha_pdf_url) || null;
   row.genomic_json = JSON.stringify(cleanGenomicData(body.genomic_data));
   return row;

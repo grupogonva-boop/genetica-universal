@@ -51,7 +51,8 @@
   }
   function buildGallery(t){
     const gallery=[{foto:t.foto,label:`${t.nombre} · ${t.codigo}`}];
-    if(t.fotoAlt)gallery.push({foto:t.fotoAlt,label:`${t.nombre} · otro ángulo`});
+    const extra=Array.isArray(t.fotosExtra)&&t.fotosExtra.length?t.fotosExtra:(t.fotoAlt?[t.fotoAlt]:[]);
+    extra.forEach(foto=>gallery.push({foto,label:t.nombre}));
     const ancestors=Array.isArray(t.ancestors)&&t.ancestors.length?t.ancestors:(t.ancestorPhoto?[t.ancestorPhoto]:[]);
     ancestors.forEach(a=>gallery.push({foto:a.foto,label:`${a.label||a.relation} · ${a.name}`}));
     return gallery;
