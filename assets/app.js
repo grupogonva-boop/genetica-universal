@@ -74,7 +74,7 @@ document.addEventListener('keydown',e=>{if(!document.getElementById('imageViewer
 function openCatalogModal(){document.getElementById('catalogModalSlot').appendChild(document.getElementById('catalogInteractive'));document.getElementById('catalogModalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('catalogModalClose').focus();}
 function closeCatalogModal(){const back=document.getElementById('catalogModalBack');if(!back.classList.contains('open'))return false;const anchor=document.getElementById('catalogHomeAnchor');anchor.parentNode.insertBefore(document.getElementById('catalogInteractive'),anchor);back.classList.remove('open');if(!document.getElementById('modalBack').classList.contains('open')&&!document.getElementById('imageViewer').classList.contains('open'))document.body.style.overflow='';return true;}
 document.getElementById('openCatalogModal').addEventListener('click',openCatalogModal);
-document.getElementById('heroCatalogBtn')?.addEventListener('click',openCatalogModal);
+document.getElementById('heroCatalogBtn')?.addEventListener('click',()=>{document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});openCatalogModal();});
 document.getElementById('catalogModalClose').addEventListener('click',closeCatalogModal);
 document.getElementById('catalogModalBack').addEventListener('click',e=>{if(e.target.id==='catalogModalBack')closeCatalogModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(closeBullImage())return;if(closeCatalogModal())return;closeModal();}});
