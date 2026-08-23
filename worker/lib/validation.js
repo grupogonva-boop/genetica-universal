@@ -72,6 +72,7 @@ export function cleanFieldSet(body) {
   row.foto = cleanImageUrl(body.foto) || null;
   row.raza = row.raza || 'Holstein';
   row.activo = body.activo === false ? 0 : 1;
+  row.limitado = body.limitado ? 1 : 0;
   row.traits_json = JSON.stringify(cleanTraits(body.traits));
   row.ancestors_json = JSON.stringify(cleanAncestors(body.ancestors));
   row.fotos_extra_json = JSON.stringify(cleanExtraFotos(body.fotosExtra));

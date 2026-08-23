@@ -53,7 +53,7 @@ const TRAIT_TEMPLATE=[
 
 const params=new URLSearchParams(location.search);
 const editCodigo=(params.get('codigo')||'').trim().toUpperCase();
-let sire={activo:true,ancestors:[],fotosExtra:[],traits:TRAIT_TEMPLATE.map(([label,left,right])=>[label,0,left,right,right])};
+let sire={activo:true,limitado:false,ancestors:[],fotosExtra:[],traits:TRAIT_TEMPLATE.map(([label,left,right])=>[label,0,left,right,right])};
 
 function renderFields(){
   for(const [containerId,fields] of Object.entries(SECTIONS)){
@@ -64,6 +64,8 @@ function renderFields(){
 function fillFields(){
   document.querySelectorAll('.field-grid [data-key]').forEach(input=>{const value=sire[input.dataset.key];input.value=value==null?'':value;});
   $('#activoCheck').checked=sire.activo!==false;
+  $('#limitadoCheck').checked=Boolean(sire.limitado);
+  $('#limitadoCheck').addEventListener('change',()=>{sire.limitado=$('#limitadoCheck').checked;refreshPreview();});
 }
 
 function renderAncestors(){
@@ -154,7 +156,7 @@ function refreshPreview(){
 }
 
 function collectPayload(){
-  return{...sire,activo:$('#activoCheck').checked,traits:sire.traits,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),fotosExtra:sire.fotosExtra.filter(Boolean)};
+  return{...sire,activo:$('#activoCheck').checked,limitado:$('#limitadoCheck').checked,traits:sire.traits,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),fotosExtra:sire.fotosExtra.filter(Boolean)};
 }
 
 async function loadExisting(){
