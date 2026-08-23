@@ -70,7 +70,7 @@ async function api(path,options={}){
   if(!response.ok)throw new Error(data.error||'No se pudo completar la operación');return data;
 }
 let sessionEmail=null;
-function showDashboard(email){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();}
+function showDashboard(email){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();loadPromotions();}
 function showChangePassword(email){sessionEmail=email;$('#loginView').hidden=true;$('#dashboard').hidden=true;$('#changePasswordView').hidden=false;}
 function enterApp(email,forceChange){forceChange?showChangePassword(email):showDashboard(email);}
 async function restoreSession(){try{const data=await api('/api/session');if(data.authenticated)enterApp(data.email,data.mustChangePassword);}catch{}}
@@ -197,4 +197,33 @@ $('#downloadTemplate').addEventListener('click',()=>{
   const example=FIELDS.map(field=>field.key.startsWith('trait_')?0:(exampleByKey[field.key]??''));
   const book=XLSX.utils.book_new(),sheet=XLSX.utils.aoa_to_sheet([headers,example]);XLSX.utils.book_append_sheet(book,sheet,'Sementales');XLSX.writeFile(book,'plantilla-sementales-genetica-universal.xlsx');
 });
+async function uploadFile(slot,file){
+  const form=new FormData();form.append('codigo','PROMO');form.append('slot',slot);form.append('file',file);
+  const response=await fetch('/api/upload',{method:'POST',credentials:'same-origin',body:form});
+  const data=await response.json().catch(()=>({error:'Respuesta inválida del servidor'}));
+  if(!response.ok)throw new Error(data.error||'No se pudo subir el archivo');return data;
+}
+let promoItems=[];
+async function loadPromotions(){try{const data=await api('/api/promotions');promoItems=data.promotions||[];renderPromotions();}catch(error){console.error(error);}}
+function renderPromotions(){
+  $('#promoList').innerHTML=promoItems.map(p=>`<div class="promo-item"><img src="${p.url}" alt=""><button type="button" data-remove-promo="${p.id}" aria-label="Quitar imagen">×</button></div>`).join('');
+  document.querySelectorAll('[data-remove-promo]').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(!confirm('¿Quitar esta imagen de promociones?'))return;
+    try{await api(`/api/promotions/${btn.dataset.removePromo}`,{method:'DELETE'});await loadPromotions();}catch(error){alert(error.message);}
+  }));
+}
+const dropPromo=$('#dropPromo'),promoInput=dropPromo.querySelector('input');
+['dragenter','dragover'].forEach(type=>dropPromo.addEventListener(type,event=>{event.preventDefault();dropPromo.classList.add('drag');}));
+['dragleave','drop'].forEach(type=>dropPromo.addEventListener(type,event=>{event.preventDefault();dropPromo.classList.remove('drag');}));
+dropPromo.addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file)handlePromoUpload(file);});
+promoInput.addEventListener('change',()=>{const file=promoInput.files[0];if(file)handlePromoUpload(file);});
+async function handlePromoUpload(file){
+  try{
+    const {url}=await uploadFile('promo',file);
+    await api('/api/promotions',{method:'POST',body:JSON.stringify({url})});
+    promoInput.value='';
+    await loadPromotions();
+  }catch(error){alert(error.message);}
+}
+
 restoreSession();

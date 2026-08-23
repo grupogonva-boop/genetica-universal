@@ -1,6 +1,7 @@
 import { cleanText, cleanDataText } from './lib/validation.js';
 import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, purgeSire, bulkUpsertSires } from './routes/sires.js';
 import { handleUpload } from './routes/upload.js';
+import { listPromotions, addPromotion, deletePromotion } from './routes/promotions.js';
 
 const SESSION_COOKIE='gu_admin_session';
 const MAX_BODY_BYTES=3_000_000;
@@ -55,10 +56,14 @@ async function loginLimited(request,env){
 async function recordLoginFailure(request,env){const ip=request.headers.get('cf-connecting-ip')||'unknown',digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip)),key=base64url(new Uint8Array(digest));await env.DB.prepare('UPDATE login_attempts SET attempts = attempts + 1 WHERE ip_hash = ?1').bind(key).run();}
 
 async function handleApi(request,env,url){
-  if(request.method==='OPTIONS'&&url.pathname==='/api/public/sires'){const headers=publicCors(request,env);return new Response(null,{status:204,headers:{...headers,'access-control-allow-methods':'GET, OPTIONS'}});}
+  if(request.method==='OPTIONS'&&(url.pathname==='/api/public/sires'||url.pathname==='/api/public/promotions')){const headers=publicCors(request,env);return new Response(null,{status:204,headers:{...headers,'access-control-allow-methods':'GET, OPTIONS'}});}
   if(url.pathname==='/api/public/sires'&&request.method==='GET'){
     const data=await publicSires(env);
     return json(data,200,{...publicCors(request,env),'cache-control':'public, max-age=300'});
+  }
+  if(url.pathname==='/api/public/promotions'&&request.method==='GET'){
+    const data=await listPromotions(env);
+    return json(data,200,{...publicCors(request,env),'cache-control':'public, max-age=120'});
   }
   if(!['GET','HEAD'].includes(request.method)&&!sameOrigin(request))return json({error:'Origen no autorizado'},403);
   if(url.pathname==='/api/login'&&request.method==='POST'){
@@ -117,6 +122,14 @@ async function handleApi(request,env,url){
   }
   if(url.pathname==='/api/upload'&&request.method==='POST'){
     try{return json(await handleUpload(request,env,session));}catch(error){return json({error:error.message},error.status||400);}
+  }
+  if(url.pathname==='/api/promotions'&&request.method==='GET')return json(await listPromotions(env));
+  if(url.pathname==='/api/promotions'&&request.method==='POST'){
+    try{const body=await readJson(request);return json(await addPromotion(env,body.url),201);}catch(error){return json({error:error.message},error.status||400);}
+  }
+  const promoMatch=url.pathname.match(/^\/api\/promotions\/(\d+)$/);
+  if(promoMatch&&request.method==='DELETE'){
+    try{return json(await deletePromotion(env,Number(promoMatch[1])));}catch(error){return json({error:error.message},error.status||400);}
   }
 
   if(url.pathname==='/api/import'&&request.method==='POST'){

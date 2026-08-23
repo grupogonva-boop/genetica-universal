@@ -43,7 +43,7 @@
 .catalog-sheet{background:var(--surface)}.catalog-sheet-scroll{overflow-y:auto;background:var(--surface)}
 .catalog-titlebar{min-height:84px;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:16px 28px;background:linear-gradient(115deg,#111017,#24131a 62%,#5b171e);color:#fff;border-bottom:5px solid var(--red)}
 .catalog-titlebar small{color:#ff9da1;font:700 .54rem/1 'JetBrains Mono',monospace;letter-spacing:.16em}
-.catalog-titlebar h2{margin-top:6px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:.9;letter-spacing:-.045em}
+.catalog-titlebar h2{margin-top:6px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:.9;letter-spacing:-.045em}.catalog-registered-name{margin-top:8px;color:#e7c6c8;font:600 .78rem/1 'JetBrains Mono',monospace;letter-spacing:.02em}
 .catalog-title-id{text-align:right}.catalog-title-id span,.catalog-title-id small{display:block}.catalog-title-id span{font:800 .85rem 'JetBrains Mono',monospace}.catalog-title-id small{margin-top:5px;color:#fff;letter-spacing:.04em}.catalog-title-id small.catalog-limited-tag{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.16);font:700 .56rem/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#fff}
 .catalog-overview{display:grid;grid-template-columns:1fr;border-bottom:1px solid var(--border)}
 .catalog-facts{min-width:0}

@@ -21,7 +21,7 @@
     return `<div class="ficha-shell bull-sheet catalog-sheet">
     <div class="bull-sheet-scroll catalog-sheet-scroll">
       <div class="ficha-print-header"><img src="assets/media/asset-01-a51888de9c.png" alt=""><span>Genética Universal</span></div>
-      <header class="catalog-titlebar"><div><small>FICHA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombreRegistrado||t.nombre}</h2></div><div class="catalog-title-id"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small>${t.limitado?'<small class="catalog-limited-tag">Limitado</small>':''}</div></header>
+      <header class="catalog-titlebar"><div><small>FICHA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombre}</h2>${t.nombreRegistrado?`<p class="catalog-registered-name">${t.nombreRegistrado}</p>`:''}</div><div class="catalog-title-id"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small>${t.limitado?'<small class="catalog-limited-tag">Limitado</small>':''}</div></header>
       <div class="catalog-overview">
         <div class="catalog-facts">
           <section class="bull-index-band catalog-index" aria-label="Índices principales"><div><small>GTPI</small><strong>${d.tpi}</strong></div><div><small>NM$</small><strong>+${t.nm}</strong></div><div><small>Leche</small><strong>+${t.milk}</strong><em>lb</em></div></section>

@@ -1,4 +1,4 @@
-const CONFIG={whatsapp:"524491793772",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
+const CONFIG={whatsapp:"524491793772",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",promotionsApi:"https://admin.geneticauniversal.com/api/public/promotions",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
 let TOROS=Array.isArray(window.SIRE_CATALOG)?window.SIRE_CATALOG:[];
 let activeF="all",searchTerm="",sortKey=null,sortDir=1,columnFilters={},fichaStep=0,imageViewerTrigger=null;
 const waLink=(m)=>`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(m)}`;
@@ -133,6 +133,32 @@ function renderHero(){
   play();
 }
 renderHero();
+
+/* Carrusel de promociones — solo se muestra si el cliente cargó imágenes. */
+let promoTimer;
+async function loadPromotions(){
+  if(!CONFIG.promotionsApi)return;
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),3500);
+  try{
+    const response=await fetch(CONFIG.promotionsApi,{signal:controller.signal,mode:'cors'});
+    if(!response.ok)throw new Error('Promociones no disponibles');
+    const data=await response.json();
+    const items=Array.isArray(data.promotions)?data.promotions:[];
+    const section=document.getElementById('promociones');
+    if(!items.length){section.hidden=true;return;}
+    const car=document.getElementById('promoCarousel'),dots=document.getElementById('promoDots');
+    car.innerHTML=items.map((p,i)=>`<div class="promo-slide${i===0?' active':''}"><img src="${p.url}" alt="Promoción" loading="lazy"></div>`).join('');
+    dots.innerHTML=items.length>1?items.map((_,i)=>`<i data-i="${i}" class="${i===0?'on':''}"></i>`).join(''):'';
+    section.hidden=false;
+    if(items.length<2)return;
+    const slides=[...car.children],dd=[...dots.children];let pi=0;
+    function go(n){slides[pi].classList.remove('active');dd[pi]?.classList.remove('on');pi=(n+items.length)%items.length;slides[pi].classList.add('active');dd[pi]?.classList.add('on');}
+    function play(){clearInterval(promoTimer);promoTimer=setInterval(()=>go(pi+1),4500);}
+    dots.onclick=e=>{const b=e.target.closest('i');if(!b)return;clearInterval(promoTimer);go(+b.dataset.i);play();};
+    play();
+  }catch{/* Si falla, la sección se queda oculta sin interrumpir el resto del sitio. */}finally{clearTimeout(timeout);}
+}
+loadPromotions();
 
 /* Profundidad sutil del hero para punteros precisos; sin movimiento en touch o accesibilidad reducida. */
 (function initHeroDepth(){
