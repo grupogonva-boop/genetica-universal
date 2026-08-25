@@ -150,13 +150,25 @@ async function loadPromotions(){
     car.innerHTML=items.map((p,i)=>`<div class="promo-slide${i===0?' active':''}"><img src="${p.url}" alt="Promoción" loading="lazy"></div>`).join('');
     dots.innerHTML=items.length>1?items.map((_,i)=>`<i data-i="${i}" class="${i===0?'on':''}"></i>`).join(''):'';
     section.hidden=false;
-    if(items.length<2)return;
     const slides=[...car.children],dd=[...dots.children];let pi=0;
     function go(n){slides[pi].classList.remove('active');dd[pi]?.classList.remove('on');pi=(n+items.length)%items.length;slides[pi].classList.add('active');dd[pi]?.classList.add('on');}
-    function play(){clearInterval(promoTimer);promoTimer=setInterval(()=>go(pi+1),4500);}
+    function play(){if(items.length<2)return;clearInterval(promoTimer);promoTimer=setInterval(()=>go(pi+1),4500);}
     dots.onclick=e=>{const b=e.target.closest('i');if(!b)return;clearInterval(promoTimer);go(+b.dataset.i);play();};
+    car.addEventListener('mouseenter',()=>clearInterval(promoTimer));
+    car.addEventListener('mouseleave',play);
+    car.addEventListener('click',e=>{const slide=e.target.closest('.promo-slide');if(!slide)return;openPromoImage(items,slides.indexOf(slide));});
     play();
   }catch{/* Si falla, la sección se queda oculta sin interrumpir el resto del sitio. */}finally{clearTimeout(timeout);}
+}
+function openPromoImage(items,startIndex){
+  const viewer=document.getElementById('imageViewer');
+  imageViewerTrigger=document.activeElement;
+  galleryImages=items.map((p,i)=>({foto:p.url,label:`Promoción ${i+1}`}));
+  galleryIndex=startIndex;
+  renderGalleryImage();
+  viewer.classList.add('open');viewer.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  document.getElementById('imageViewerClose').focus();
 }
 loadPromotions();
 
