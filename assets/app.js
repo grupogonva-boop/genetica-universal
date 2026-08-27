@@ -144,12 +144,12 @@ async function loadPromotions(){
     if(!response.ok)throw new Error('Promociones no disponibles');
     const data=await response.json();
     const items=Array.isArray(data.promotions)?data.promotions:[];
-    const section=document.getElementById('promociones');
-    if(!items.length){section.hidden=true;return;}
+    const section=document.getElementById('promociones'),navNoticias=document.getElementById('navNoticias');
+    if(!items.length){section.hidden=true;if(navNoticias)navNoticias.hidden=true;return;}
     const car=document.getElementById('promoCarousel'),dots=document.getElementById('promoDots');
     car.innerHTML=items.map((p,i)=>`<div class="promo-slide${i===0?' active':''}"><img src="${p.url}" alt="Promoción" loading="lazy"></div>`).join('');
     dots.innerHTML=items.length>1?items.map((_,i)=>`<i data-i="${i}" class="${i===0?'on':''}"></i>`).join(''):'';
-    section.hidden=false;
+    section.hidden=false;if(navNoticias)navNoticias.hidden=false;
     const slides=[...car.children],dd=[...dots.children];let pi=0;
     function go(n){slides[pi].classList.remove('active');dd[pi]?.classList.remove('on');pi=(n+items.length)%items.length;slides[pi].classList.add('active');dd[pi]?.classList.add('on');}
     function play(){if(items.length<2)return;clearInterval(promoTimer);promoTimer=setInterval(()=>go(pi+1),4500);}
