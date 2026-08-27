@@ -30,7 +30,7 @@ a{color:inherit;text-decoration:none}img{max-width:100%;display:block}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
 
 nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(16px) saturate(150%);background:var(--nav-bg);border-bottom:1px solid var(--border-soft)}
-.nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px;max-width:1480px}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px;max-width:1320px}
 .brand{display:flex;align-items:center;gap:11px;min-width:0;flex:0 1 auto;overflow:hidden}.brand img{height:42px}
 .nav-toggle{flex:0 0 auto}
 .brand-name{font-weight:800;letter-spacing:-.02em;font-size:1.06rem}.brand-name span{color:var(--red)}
