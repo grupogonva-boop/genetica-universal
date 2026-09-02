@@ -18,24 +18,27 @@
   }
   function renderFichaHTML(t,linearTraits){
     const d=fichaDerived(t,linearTraits);
+    const indexBandHTML=`<section class="bull-index-band catalog-index" aria-label="Índices principales"><div><small>GTPI</small><strong>${d.tpi}</strong></div><div><small>NM$</small><strong>+${t.nm}</strong></div><div><small>Leche</small><strong>+${t.milk}</strong><em>lb</em></div></section>`;
+    const pedigreeHTML=`<div class="catalog-pedigree"><small>PEDIGRÍ</small><strong>${t.ped}</strong></div>`;
+    const badgesHTML=`<div class="ficha-highlights"><span class="gbadge ${t.beta==='A2/A2'?'on':''}">Beta ${t.beta}</span><span class="gbadge ${t.kappa==='BB'?'on':''}">Kappa ${t.kappa}</span>${isQ(t)?'<span class="gbadge premium">★ Quesero</span>':''}</div>`;
     return `<div class="ficha-shell bull-sheet catalog-sheet">
     <div class="bull-sheet-scroll catalog-sheet-scroll">
       <div class="ficha-print-header"><img src="assets/media/asset-01-a51888de9c.png" alt=""><span>Genética Universal</span></div>
       <header class="catalog-titlebar"><div><small>FICHA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombre}</h2>${t.nombreRegistrado?`<p class="catalog-registered-name">${t.nombreRegistrado}</p>`:''}</div><div class="catalog-title-id"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small>${t.limitado?'<small class="catalog-limited-tag">Limitado</small>':''}</div></header>
       <div class="catalog-overview">
         <div class="catalog-facts">
-          <section class="bull-index-band catalog-index" aria-label="Índices principales"><div><small>GTPI</small><strong>${d.tpi}</strong></div><div><small>NM$</small><strong>+${t.nm}</strong></div><div><small>Leche</small><strong>+${t.milk}</strong><em>lb</em></div></section>
+          ${indexBandHTML}
           <div class="catalog-data-grid">
-            <article class="bull-data-card"><h4>Producción</h4>${metricRow('Leche PTA',`+${t.milk} lb`,'hot')}${metricRow('Grasa',`+${t.fat} lb`)}${metricRow('Grasa %',`${d.signed(d.fatPct)}%`)}${metricRow('Proteína',`+${d.protein} lb`)}${metricRow('Proteína %',`${d.signed(d.proteinPct)}%`)}</article>
-            <article class="bull-data-card"><h4>Economía</h4>${metricRow('NM$',`+${t.nm}`,'hot')}${metricRow('CM$',`+${t.cm}`)}${metricRow('CFP',`+${d.cfp} lb`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Feed Saved',d.signed(d.feedSaved))}</article>
-            <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('Vida productiva',`${d.signed(d.pl)} meses`,'hot')}${metricRow('Viabilidad',d.signed(d.livability))}${metricRow('SCS',d.scs)}${metricRow('Índice de fertilidad',d.signed(d.fertIndex))}${metricRow('Mastitis',d.signed(d.mastitis))}${metricRow('DPR',d.signed(d.dpr))}</article>
+            <article class="bull-data-card"><h4>Producción</h4>${metricRow('Leche PTA',`+${t.milk} lb`,'hot')}${metricRow('Grasa',`+${t.fat} lb`)}${metricRow('Grasa %',`${d.signed(d.fatPct)}%`)}${metricRow('Proteína',`+${d.protein} lb`)}${metricRow('Proteína %',`${d.signed(d.proteinPct)}%`)}${metricRow('CFP',`+${d.cfp} lb`)}</article>
+            <article class="bull-data-card"><h4>Economía</h4>${metricRow('NM$',`+${t.nm}`,'hot')}${metricRow('CM$',`+${t.cm}`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Feed Saved',d.signed(d.feedSaved))}</article>
+            <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('Vida productiva',`${d.signed(d.pl)} meses`,'hot')}${metricRow('Viabilidad',d.signed(d.livability))}${metricRow('SCS',d.scs)}${metricRow('Índice de fertilidad',d.signed(d.fertIndex))}${metricRow('Mastitis',d.signed(d.mastitis))}${metricRow('DPR',d.signed(d.dpr))}${metricRow('SCE',d.signed(t.sce))}</article>
           </div>
         </div>
         <aside class="catalog-identity">
           <button class="ficha-photo bull-profile-photo" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="ficha-head-img" src="${t.foto}" alt="${t.nombre}"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4M8 10.5h5M10.5 8v5"/></svg></span></button>
-          <div class="catalog-pedigree"><small>PEDIGRÍ</small><strong>${t.ped}</strong></div>
+          ${pedigreeHTML}
           <div class="catalog-parents">${t.sireName?`<div><small>SIRE</small><b>${t.sireName}</b></div>`:''}${t.damName?`<div><small>DAM</small><b>${t.damName}</b></div>`:''}${t.mgs?`<div><small>MGS</small><b>${t.mgs}</b></div>`:''}${t.mgd?`<div><small>MGD</small><b>${t.mgd}</b></div>`:''}${t.mggs?`<div><small>MGGS</small><b>${t.mggs}</b></div>`:''}${t.mggd?`<div><small>MGGD</small><b>${t.mggd}</b></div>`:''}</div>
-          <div class="ficha-highlights"><span class="gbadge ${t.beta==='A2/A2'?'on':''}">Beta ${t.beta}</span><span class="gbadge ${t.kappa==='BB'?'on':''}">Kappa ${t.kappa}</span>${isQ(t)?'<span class="gbadge premium">★ Quesero</span>':''}</div>
+          ${badgesHTML}
           ${ancestorsBlock(t)}
         </aside>
       </div>
@@ -45,8 +48,9 @@
         <div class="full-linear-list">${d.traits.map(trait=>`<div class="linear-catalog-row"><strong>${trait.label}</strong><div class="linear-catalog-chart" title="${trait.left} a ${trait.right}"><i class="${trait.direction}" style="--size:${trait.size}%"></i></div><b>${d.signed(trait.value)}</b><span>${trait.descriptor}</span></div>`).join('')}</div>
       </section>
       <section class="catalog-record"><div><small>REGISTRO</small><b>${t.reg}</b></div><div><small>NACIMIENTO</small><b>${t.dob}</b></div><div><small>RAZA</small><b>Holstein</b></div><div><small>PRESENTACIÓN</small><b>${availability(t.disponibilidad).label}</b></div><p>Evaluación oficial 08/2026 · Confirma existencias con un asesor.</p></section>
+      <div class="mobile-bottom-block">${pedigreeHTML}${badgesHTML}${indexBandHTML}</div>
     </div>
-    <footer class="bull-sheet-actions"><div class="ficha-nav-btns"><button class="ficha-nav-prev" type="button" aria-label="Toro anterior" title="Toro anterior"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><button class="ficha-nav-next" type="button" aria-label="Siguiente toro" title="Siguiente toro"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div><span><b>${t.nombre}</b><small>${t.codigo}</small></span><div class="bull-sheet-actions-btns"><a class="ficha-download" href="${t.fichaPdfUrl||`assets/media/fichas/${t.codigo}.pdf`}" download="Ficha-${t.nombre}-${t.codigo}.pdf"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a><button class="ficha-quote" type="button"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#whatsappIcon"/></svg>Solicitar información por WhatsApp</button></div></footer>
+    <footer class="bull-sheet-actions"><div class="ficha-nav-btns"><button class="ficha-nav-prev" type="button" aria-label="Toro anterior" title="Toro anterior"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><button class="ficha-nav-next" type="button" aria-label="Siguiente toro" title="Siguiente toro"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div><span><b>${t.nombre}</b><small>${t.codigo}</small></span><div class="bull-sheet-actions-btns"><a class="ficha-download" href="${t.fichaPdfUrl||`assets/media/fichas/${t.codigo}.pdf`}" download="Ficha-${t.nombre}-${t.codigo}.pdf"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Imprimir o PDF</a><button class="ficha-quote" type="button"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#whatsappIcon"/></svg>Solicitar información por WhatsApp</button></div></footer>
   </div>`;
   }
   function buildGallery(t){
