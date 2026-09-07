@@ -111,7 +111,11 @@ function parsePage(lines) {
   row.livability = inlineNum(lines, 'Livability');
   row.dpr = inlineNum(lines, '\\bDPR\\b');
   row.sce = inlineNum(lines, '\\bSCE\\b');
-  for (const k of ['mastitis', 'fertIndex', 'livability', 'dpr', 'sce']) if (row[k] == null) warnings.push(k);
+  row.rfi = inlineNum(lines, '\\bRFI\\b');
+  row.msp = inlineNum(lines, '\\bMSP\\b');
+  row.efi = inlineNum(lines, '\\bEFI\\b');
+  row.gefi = inlineNum(lines, 'gEFI');
+  for (const k of ['mastitis', 'fertIndex', 'livability', 'dpr', 'sce', 'rfi', 'msp', 'efi', 'gefi']) if (row[k] == null) warnings.push(k);
 
   m = /\bTPI\s+([+-]?\d+)/.exec(text); row.tpi = m ? num(m[1]) : null;
   m = /\bPTAT\s+([+-]?\d+\.?\d*)/.exec(text); row.ptat = m ? num(m[1]) : null;

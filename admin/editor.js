@@ -32,6 +32,7 @@ const SECTIONS={
   ],
   fieldsEconomia:[
     {key:'nm',label:'NM$',type:'number'},{key:'cm',label:'CM$',type:'number'},{key:'cfp',label:'CFP',type:'number'},{key:'feedSaved',label:'Feed Saved',type:'number'},
+    {key:'rfi',label:'RFI',type:'number',step:'0.1'},{key:'msp',label:'MSP',type:'number',step:'0.1'},{key:'efi',label:'EFI',type:'number',step:'0.1'},{key:'gefi',label:'gEFI',type:'number',step:'0.1'},
   ],
   fieldsSalud:[
     {key:'pl',label:'Vida productiva (PL)',type:'number',step:'0.1'},{key:'dpr',label:'DPR',type:'number',step:'0.1'},{key:'ccr',label:'CCR',type:'number',step:'0.1'},
@@ -151,7 +152,7 @@ const paintFicha=setupDropzone('#dropFicha','ficha',()=>sire.fichaPdfUrl,url=>si
 
 const PLACEHOLDER_PHOTO="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="220"><rect width="300" height="220" fill="#dce8e4"/><text x="150" y="115" font-family="sans-serif" font-size="14" fill="#888" text-anchor="middle">Sin fotografía</text></svg>');
 function refreshPreview(){
-  const t={...sire,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),fotosExtra:sire.fotosExtra.filter(Boolean),foto:sire.foto||PLACEHOLDER_PHOTO,nm:sire.nm??0,milk:sire.milk??0,fat:sire.fat??0,cm:sire.cm??0,cfp:sire.cfp??0,milkR:sire.milkR??0,pl:sire.pl??0,livability:sire.livability??0,scs:sire.scs??0,fertIndex:sire.fertIndex??0,mastitis:sire.mastitis??0,dpr:sire.dpr??0,fatPct:sire.fatPct??0,proteinPct:sire.proteinPct??0,protein:sire.protein??0,feedSaved:sire.feedSaved??0,ptat:sire.ptat??0,udc:sire.udc??0,flc:sire.flc??0,hcc:sire.hcc??0,tpi:sire.tpi??0,codigo:sire.codigo||'—',nombre:sire.nombre||'Nuevo semental',reg:sire.reg||'—',dob:sire.dob||'—',disponibilidad:sire.disponibilidad||''};
+  const t={...sire,ancestors:sire.ancestors.filter(a=>a.name&&a.foto),fotosExtra:sire.fotosExtra.filter(Boolean),foto:sire.foto||PLACEHOLDER_PHOTO,nm:sire.nm??0,milk:sire.milk??0,fat:sire.fat??0,cm:sire.cm??0,cfp:sire.cfp??0,milkR:sire.milkR??0,pl:sire.pl??0,livability:sire.livability??0,scs:sire.scs??0,fertIndex:sire.fertIndex??0,mastitis:sire.mastitis??0,dpr:sire.dpr??0,fatPct:sire.fatPct??0,proteinPct:sire.proteinPct??0,protein:sire.protein??0,feedSaved:sire.feedSaved??0,rfi:sire.rfi??0,msp:sire.msp??0,efi:sire.efi??0,gefi:sire.gefi??0,ptat:sire.ptat??0,udc:sire.udc??0,flc:sire.flc??0,hcc:sire.hcc??0,tpi:sire.tpi??0,codigo:sire.codigo||'—',nombre:sire.nombre||'Nuevo semental',reg:sire.reg||'—',dob:sire.dob||'—',disponibilidad:sire.disponibilidad||''};
   $('#fichaPreview').innerHTML=window.FichaRender.renderFichaHTML(t,{});
 }
 

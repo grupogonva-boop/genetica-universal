@@ -34,7 +34,7 @@ export async function getSire(env, codigo) {
   return row ? shapeRow(row) : null;
 }
 
-const COLUMNS = ['codigo', 'nombre', 'disponibilidad', 'nm', 'cm', 'milk', 'fat', 'ccr', 'cfp', 'dpr', 'fatPct', 'feedSaved', 'fertIndex', 'flc', 'hcc', 'livability', 'mastitis', 'milkR', 'pl', 'protein', 'proteinPct', 'ptat', 'sce', 'scs', 'sta', 'tpi', 'udc', 'aaa', 'dam', 'damName', 'dob', 'haplotipos', 'mgd', 'mgs', 'mggs', 'mggd', 'nombreRegistrado', 'reg', 'sireName', 'source', 'sourceUrl', 'beta', 'kappa', 'ped', 'raza', 'foto', 'traits_json', 'ancestors_json', 'fotos_extra_json', 'ficha_pdf_url', 'activo', 'limitado', 'genomic_json'];
+const COLUMNS = ['codigo', 'nombre', 'disponibilidad', 'nm', 'cm', 'milk', 'fat', 'ccr', 'cfp', 'dpr', 'fatPct', 'feedSaved', 'fertIndex', 'flc', 'hcc', 'livability', 'mastitis', 'milkR', 'pl', 'protein', 'proteinPct', 'ptat', 'sce', 'scs', 'sta', 'tpi', 'udc', 'rfi', 'msp', 'efi', 'gefi', 'aaa', 'dam', 'damName', 'dob', 'haplotipos', 'mgd', 'mgs', 'mggs', 'mggd', 'nombreRegistrado', 'reg', 'sireName', 'source', 'sourceUrl', 'beta', 'kappa', 'ped', 'raza', 'foto', 'traits_json', 'ancestors_json', 'fotos_extra_json', 'ficha_pdf_url', 'activo', 'limitado', 'genomic_json'];
 
 export async function createSire(env, session, body) {
   const row = cleanFieldSet(body);

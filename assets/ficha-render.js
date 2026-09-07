@@ -30,7 +30,7 @@
           ${indexBandHTML}
           <div class="catalog-data-grid">
             <article class="bull-data-card"><h4>Producción</h4>${metricRow('Leche PTA',`+${t.milk} lb`,'hot')}${metricRow('Grasa',`+${t.fat} lb`)}${metricRow('Grasa %',`${d.signed(d.fatPct)}%`)}${metricRow('Proteína',`+${d.protein} lb`)}${metricRow('Proteína %',`${d.signed(d.proteinPct)}%`)}${metricRow('CFP',`+${d.cfp} lb`)}</article>
-            <article class="bull-data-card"><h4>Economía</h4>${metricRow('NM$',`+${t.nm}`,'hot')}${metricRow('CM$',`+${t.cm}`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Feed Saved',d.signed(d.feedSaved))}</article>
+            <article class="bull-data-card"><h4>Economía</h4>${metricRow('NM$',`+${t.nm}`,'hot')}${metricRow('CM$',`+${t.cm}`)}${metricRow('Confiabilidad',`${d.reliability}%`)}${metricRow('Feed Saved',d.signed(d.feedSaved))}${t.rfi!=null?metricRow('RFI',d.signed(t.rfi)):''}${t.msp!=null?metricRow('MSP',d.signed(t.msp)):''}${t.efi!=null?metricRow('EFI',`${d.signed(t.efi)}%`):''}${t.gefi!=null?metricRow('gEFI',`${d.signed(t.gefi)}%`):''}</article>
             <article class="bull-data-card"><h4>Salud y fertilidad</h4>${metricRow('Vida productiva',`${d.signed(d.pl)} meses`,'hot')}${metricRow('Viabilidad',d.signed(d.livability))}${metricRow('SCS',d.scs)}${metricRow('Índice de fertilidad',d.signed(d.fertIndex))}${metricRow('Mastitis',d.signed(d.mastitis))}${metricRow('DPR',d.signed(d.dpr))}${metricRow('SCE',d.signed(t.sce))}</article>
           </div>
         </div>
