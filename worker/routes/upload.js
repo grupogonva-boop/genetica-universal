@@ -1,3 +1,5 @@
+import { addFichaHeader } from '../lib/ficha-header.js';
+
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
 const SLOTS = new Set(['main', 'extra', 'ancestor', 'ficha', 'promo']);
@@ -29,13 +31,21 @@ export async function handleUpload(request, env, session) {
   if (slot !== 'promo' && !/^[A-Z0-9]{3,20}$/.test(codigo)) { const e = new Error('Código de semental inválido.'); e.status = 400; throw e; }
   if (!(file instanceof File)) { const e = new Error('No se recibió ningún archivo.'); e.status = 400; throw e; }
 
-  const buffer = new Uint8Array(await file.arrayBuffer());
+  let buffer = new Uint8Array(await file.arrayBuffer());
   const type = sniffType(buffer);
   if (!type) { const e = new Error('El archivo no es una imagen (JPG/PNG/WEBP) ni un PDF válido.'); e.status = 400; throw e; }
   if (slot === 'ficha' && type.kind !== 'pdf') { const e = new Error('La ficha descargable debe ser un PDF.'); e.status = 400; throw e; }
   if (slot !== 'ficha' && type.kind !== 'image') { const e = new Error('Esta foto debe ser JPG, PNG o WEBP.'); e.status = 400; throw e; }
   const maxBytes = type.kind === 'pdf' ? MAX_PDF_BYTES : MAX_IMAGE_BYTES;
   if (buffer.byteLength > maxBytes) { const e = new Error(`El archivo supera el máximo de ${Math.round(maxBytes / 1024 / 1024)} MB.`); e.status = 400; throw e; }
+
+  // La ficha se sube tal cual la manda el cliente (sin tocar sus colores);
+  // solo se le agrega la barra con el logo arriba, en espacio nuevo de la
+  // página para no tapar nada del PDF original.
+  if (slot === 'ficha') {
+    try { buffer = new Uint8Array(await addFichaHeader(buffer)); }
+    catch { const e = new Error('No se pudo procesar el PDF de la ficha. Verifica que no esté dañado o protegido.'); e.status = 400; throw e; }
+  }
 
   const key = slot === 'ficha' ? `fichas/${codigo}.pdf`
     : slot === 'promo' ? `promos/${await shortHash(buffer)}.${type.ext}`
