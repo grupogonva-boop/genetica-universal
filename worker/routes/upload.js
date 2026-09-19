@@ -56,5 +56,5 @@ export async function handleUpload(request, env, session) {
     customMetadata: { uploadedBy: session.email, uploadedAt: new Date().toISOString() },
   });
 
-  return { url: PUBLIC_MEDIA_BASE + key, key };
+  return { url: PUBLIC_MEDIA_BASE + key, key, slot, codigo: codigo || null };
 }

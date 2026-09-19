@@ -2,6 +2,7 @@ import { cleanText, cleanDataText } from './lib/validation.js';
 import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, purgeSire, bulkUpsertSires } from './routes/sires.js';
 import { handleUpload } from './routes/upload.js';
 import { listPromotions, addPromotion, deletePromotion } from './routes/promotions.js';
+import { logAction, listAuditLog, diffSummary } from './lib/audit.js';
 
 const SESSION_COOKIE='gu_admin_session';
 const MAX_BODY_BYTES=3_000_000;
@@ -79,12 +80,12 @@ async function handleApi(request,env,url){
     }
     if(!authenticatedEmail){await recordLoginFailure(request,env);return json({error:'Correo o contraseña incorrectos'},401);}
     const session=await createSession(authenticatedEmail,env.SESSION_SECRET);
-    return json({email:authenticatedEmail,mustChangePassword:await mustChangePassword(authenticatedEmail,env)},200,{'set-cookie':`${SESSION_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`});
+    return json({email:authenticatedEmail,mustChangePassword:await mustChangePassword(authenticatedEmail,env),isOwner:authenticatedEmail===env.ADMIN_EMAIL},200,{'set-cookie':`${SESSION_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`});
   }
   const session=await readSession(request,env);
   if(url.pathname==='/api/session'&&request.method==='GET'){
     if(!session)return json({authenticated:false},401);
-    return json({authenticated:true,email:session.email,mustChangePassword:await mustChangePassword(session.email,env)});
+    return json({authenticated:true,email:session.email,mustChangePassword:await mustChangePassword(session.email,env),isOwner:session.email===env.ADMIN_EMAIL});
   }
   if(!session)return json({error:'Sesión vencida. Vuelve a ingresar.'},401);
   if(url.pathname==='/api/logout'&&request.method==='POST')return json({ok:true},200,{'set-cookie':`${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`});
@@ -97,39 +98,82 @@ async function handleApi(request,env,url){
     const saltBytes=crypto.getRandomValues(new Uint8Array(16)),saltHex=[...saltBytes].map(b=>b.toString(16).padStart(2,'0')).join('');
     const newHash=await hashPassword(next,saltHex);
     await env.DB.prepare('UPDATE admin_users SET password_hash=?1,password_salt=?2,must_change_password=0,updated_at=?3 WHERE email=?4').bind(newHash,saltHex,new Date().toISOString(),session.email).run();
+    await logAction(env,session,'password.change',session.email,'Cambio de contraseña');
     return json({ok:true});
+  }
+
+  if(url.pathname==='/api/logs'&&request.method==='GET'){
+    if(session.email!==env.ADMIN_EMAIL)return json({error:'No autorizado'},403);
+    return json(await listAuditLog(env));
   }
 
   if(url.pathname==='/api/sires'&&request.method==='GET')return json(await listSires(env));
   if(url.pathname==='/api/sires'&&request.method==='POST'){
-    try{return json(await createSire(env,session,await readJson(request)),201);}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const created=await createSire(env,session,await readJson(request));
+      await logAction(env,session,'sire.create',created.codigo,`Nuevo semental: ${created.nombre}`);
+      return json(created,201);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   const sireMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})$/);
   if(sireMatch&&request.method==='GET'){const row=await getSire(env,sireMatch[1].toUpperCase());return row?json(row):json({error:'No encontrado'},404);}
   if(sireMatch&&request.method==='PUT'){
-    try{return json(await updateSire(env,session,sireMatch[1].toUpperCase(),await readJson(request)));}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const codigo=sireMatch[1].toUpperCase();
+      const before=await getSire(env,codigo);
+      const updated=await updateSire(env,session,codigo,await readJson(request));
+      await logAction(env,session,'sire.update',updated.codigo,`${updated.nombre}: ${diffSummary(before,updated)}`);
+      return json(updated);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   if(sireMatch&&request.method==='DELETE'){
-    try{return json(await setSireActive(env,sireMatch[1].toUpperCase(),false));}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const result=await setSireActive(env,sireMatch[1].toUpperCase(),false);
+      await logAction(env,session,'sire.deactivate',result.codigo,`${result.nombre} dado de baja`);
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   const restoreMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})\/restore$/);
   if(restoreMatch&&request.method==='POST'){
-    try{return json(await setSireActive(env,restoreMatch[1].toUpperCase(),true));}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const result=await setSireActive(env,restoreMatch[1].toUpperCase(),true);
+      await logAction(env,session,'sire.restore',result.codigo,`${result.nombre} restaurado`);
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   const purgeMatch=url.pathname.match(/^\/api\/sires\/([A-Za-z0-9]{3,20})\/purge$/);
   if(purgeMatch&&request.method==='DELETE'){
-    try{return json(await purgeSire(env,purgeMatch[1].toUpperCase()));}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const codigo=purgeMatch[1].toUpperCase();
+      const before=await getSire(env,codigo);
+      const result=await purgeSire(env,codigo);
+      await logAction(env,session,'sire.purge',codigo,`Borrado definitivo: ${before?.nombre||codigo}`);
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   if(url.pathname==='/api/upload'&&request.method==='POST'){
-    try{return json(await handleUpload(request,env,session));}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const result=await handleUpload(request,env,session);
+      await logAction(env,session,'upload',result.codigo||result.key,`Archivo (${result.slot}) subido${result.codigo?` para ${result.codigo}`:''}`);
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   if(url.pathname==='/api/promotions'&&request.method==='GET')return json(await listPromotions(env));
   if(url.pathname==='/api/promotions'&&request.method==='POST'){
-    try{const body=await readJson(request);return json(await addPromotion(env,body.url),201);}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const body=await readJson(request);
+      const result=await addPromotion(env,body.url);
+      await logAction(env,session,'promotion.add',null,'Imagen agregada a promociones');
+      return json(result,201);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
   const promoMatch=url.pathname.match(/^\/api\/promotions\/(\d+)$/);
   if(promoMatch&&request.method==='DELETE'){
-    try{return json(await deletePromotion(env,Number(promoMatch[1])));}catch(error){return json({error:error.message},error.status||400);}
+    try{
+      const result=await deletePromotion(env,Number(promoMatch[1]));
+      await logAction(env,session,'promotion.remove',promoMatch[1],'Imagen quitada de promociones');
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
   }
 
   if(url.pathname==='/api/import'&&request.method==='POST'){
@@ -139,6 +183,7 @@ async function handleApi(request,env,url){
     try{
       const imported=await bulkUpsertSires(env,session,body.rows);
       await env.DB.prepare("UPDATE import_batches SET status='completed' WHERE id=?1").bind(importId).run();
+      await logAction(env,session,'sire.bulk_import',importId,`${imported} sementales importados/actualizados${filename?` desde ${filename}`:''}`);
       console.log(JSON.stringify({message:'catalog import completed',importId,rows:imported,email:session.email}));
       return json({imported,importId});
     }catch(error){

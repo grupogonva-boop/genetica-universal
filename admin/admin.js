@@ -74,11 +74,11 @@ async function api(path,options={}){
   if(!response.ok)throw new Error(data.error||'No se pudo completar la operación');return data;
 }
 let sessionEmail=null;
-function showDashboard(email){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();loadPromotions();}
+function showDashboard(email,isOwner){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();loadPromotions();$('#logsPanel').hidden=!isOwner;if(isOwner)loadLogs();}
 function showChangePassword(email){sessionEmail=email;$('#loginView').hidden=true;$('#dashboard').hidden=true;$('#changePasswordView').hidden=false;}
-function enterApp(email,forceChange){forceChange?showChangePassword(email):showDashboard(email);}
-async function restoreSession(){try{const data=await api('/api/session');if(data.authenticated)enterApp(data.email,data.mustChangePassword);}catch{}}
-$('#loginForm').addEventListener('submit',async event=>{event.preventDefault();const status=$('#loginStatus');status.textContent='Validando…';try{const data=await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});$('#password').value='';status.textContent='';enterApp(data.email,data.mustChangePassword);}catch(error){status.textContent=error.message;}});
+function enterApp(email,forceChange,isOwner){forceChange?showChangePassword(email):showDashboard(email,isOwner);}
+async function restoreSession(){try{const data=await api('/api/session');if(data.authenticated)enterApp(data.email,data.mustChangePassword,data.isOwner);}catch{}}
+$('#loginForm').addEventListener('submit',async event=>{event.preventDefault();const status=$('#loginStatus');status.textContent='Validando…';try{const data=await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});$('#password').value='';status.textContent='';enterApp(data.email,data.mustChangePassword,data.isOwner);}catch(error){status.textContent=error.message;}});
 $('#changePasswordForm').addEventListener('submit',async event=>{
   event.preventDefault();
   const status=$('#changePasswordStatus'),current=$('#cpCurrent').value,next=$('#cpNew').value,confirm=$('#cpConfirm').value;
@@ -270,5 +270,19 @@ async function handlePromoUpload(file){
     await loadPromotions();
   }catch(error){alert(error.message);}
 }
+
+const LOG_ACTION_LABELS={
+  'sire.create':'Semental creado','sire.update':'Semental editado','sire.deactivate':'Semental dado de baja',
+  'sire.restore':'Semental restaurado','sire.purge':'Semental borrado definitivo','sire.bulk_import':'Carga masiva',
+  'promotion.add':'Promoción agregada','promotion.remove':'Promoción quitada','upload':'Archivo subido','password.change':'Contraseña cambiada',
+};
+async function loadLogs(){
+  try{
+    const data=await api('/api/logs');
+    const rows=data.logs||[];
+    $('#logRows').innerHTML=rows.length?rows.map(row=>`<tr><td>${new Date(row.created_at).toLocaleString('es-MX')}</td><td>${escapeHtml(row.actor_email)}</td><td>${escapeHtml(LOG_ACTION_LABELS[row.action]||row.action)}</td><td>${escapeHtml(row.summary||row.target||'—')}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">Sin actividad todavía.</td></tr>';
+  }catch(error){$('#logRows').innerHTML=`<tr><td colspan="4" class="empty">${escapeHtml(error.message)}</td></tr>`;}
+}
+$('#refreshLogs')?.addEventListener('click',loadLogs);
 
 restoreSession();
