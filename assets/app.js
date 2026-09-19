@@ -4,14 +4,14 @@ let activeF="all",searchTerm="",sortKey="tpi",sortDir=-1,columnFilters={},fichaS
 const waLink=(m)=>`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(m)}`;
 const {isQ,availability,signed,buildGallery}=window.FichaRender;
 const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','hcc'];
-let showSelectedOnly=false;
+let showSelectedOnly=false,selectedOnlySnapshot=[];
 function pass(t){
   if(activeF==="a2"&&t.beta!=="A2/A2")return false;
   if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
   if(activeF==="conv"&&!['conv','conv-sex','s-conv'].includes(t.disponibilidad))return false;
   if(activeF==="proven"&&Number(t.milkR)<=90)return false;
   if(activeF==="genomic"&&Number(t.milkR)>90)return false;
-  if(showSelectedOnly&&!compareSelection.includes(t.codigo))return false;
+  if(showSelectedOnly&&!selectedOnlySnapshot.includes(t.codigo))return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+t.sireName+" "+t.damName+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
   for(const [key,value] of Object.entries(columnFilters)){
     if(NUMERIC_COLS.includes(key)){
@@ -132,7 +132,7 @@ const COMPARE_PERF_FIELDS=[
 function syncCompareCheckboxes(){document.querySelectorAll('.compare-check').forEach(cb=>{cb.checked=compareSelection.includes(cb.dataset.codigo);});}
 function renderCompareTray(){
   const tray=document.getElementById('compareTray');
-  if(!compareSelection.length){showSelectedOnly=false;tray.hidden=true;tray.innerHTML='';return;}
+  if(!compareSelection.length){showSelectedOnly=false;selectedOnlySnapshot=[];tray.hidden=true;tray.innerHTML='';return;}
   const bulls=compareSelection.map(codigo=>TOROS.find(t=>t.codigo===codigo)).filter(Boolean);
   tray.hidden=false;
   let compareAction;
@@ -146,13 +146,12 @@ function toggleCompare(codigo,checked){
   if(checked)compareSelection.push(codigo);
   else compareSelection=compareSelection.filter(c=>c!==codigo);
   renderCompareTray();syncCompareCheckboxes();
-  if(showSelectedOnly)renderTable();
 }
 document.getElementById('compareTray').addEventListener('click',e=>{
   const remove=e.target.closest('[data-remove-compare]');
   if(remove){toggleCompare(remove.dataset.removeCompare,false);return;}
   if(e.target.closest('#clearCompare')){compareSelection=[];renderCompareTray();syncCompareCheckboxes();renderTable();return;}
-  if(e.target.closest('#filterSelected')){showSelectedOnly=!showSelectedOnly;renderCompareTray();renderTable();return;}
+  if(e.target.closest('#filterSelected')){showSelectedOnly=!showSelectedOnly;selectedOnlySnapshot=showSelectedOnly?[...compareSelection]:[];renderCompareTray();renderTable();return;}
   if(e.target.closest('#openCompare'))openCompareModal();
 });
 function fmtCompare(n,dec,unit){return Number.isFinite(n)?`${signed(n.toFixed(dec))}${unit||''}`:'—';}
