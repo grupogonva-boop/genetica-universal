@@ -22,6 +22,59 @@ function inlineNum(lines, labelPattern) {
   return null;
 }
 
+// Busca la fotografía principal del semental dentro de la página: recorre
+// la lista de operadores en busca de imágenes pintadas (paintImageXObject),
+// renderiza la página para que PDF.js resuelva los bitmaps, y toma la
+// primera imagen "apaisada" y suficientemente grande (>=400px en su lado
+// menor) — así se descartan íconos/insignias cuadradas (EcoFeed+, A2A2,
+// Proven, Ultra Fertility) y se evita quedarse con la foto de una hija/grupo
+// cuando hay varias del mismo tamaño en la página.
+function paintImageToCanvas(ctx, img, w, h) {
+  if (img.bitmap) { ctx.drawImage(img.bitmap, 0, 0, w, h); return true; }
+  const src = img.data;
+  if (!src) return false;
+  const channels = src.length / (w * h);
+  const out = ctx.createImageData(w, h);
+  const dst = out.data;
+  if (channels === 4) dst.set(src);
+  else if (channels === 3) { for (let i = 0, j = 0; i < src.length; i += 3, j += 4) { dst[j] = src[i]; dst[j + 1] = src[i + 1]; dst[j + 2] = src[i + 2]; dst[j + 3] = 255; } }
+  else if (channels === 1) { for (let i = 0, j = 0; i < src.length; i++, j += 4) { dst[j] = dst[j + 1] = dst[j + 2] = src[i]; dst[j + 3] = 255; } }
+  else return false;
+  ctx.putImageData(out, 0, 0);
+  return true;
+}
+
+async function extractMainPhoto(page) {
+  try {
+    const opList = await page.getOperatorList();
+    const names = [];
+    for (let i = 0; i < opList.fnArray.length; i++) {
+      if (opList.fnArray[i] === pdfjsLib.OPS.paintImageXObject) names.push(opList.argsArray[i][0]);
+    }
+    if (!names.length) return null;
+    const viewport = page.getViewport({ scale: 1.5 });
+    const renderCanvas = document.createElement('canvas');
+    renderCanvas.width = viewport.width; renderCanvas.height = viewport.height;
+    await page.render({ canvasContext: renderCanvas.getContext('2d'), viewport }).promise;
+    for (const name of names) {
+      let img = null;
+      try { img = page.objs.get(name); } catch { /* no resuelto */ }
+      if (!img) { try { img = page.commonObjs.get(name); } catch { /* no resuelto */ } }
+      if (!img || !img.width || !img.height) continue;
+      const { width: w, height: h } = img;
+      if (Math.min(w, h) < 400 || w <= h) continue; // descarta íconos y retratos verticales
+      const out = document.createElement('canvas');
+      out.width = w; out.height = h;
+      if (!paintImageToCanvas(out.getContext('2d'), img, w, h)) continue;
+      const blob = await new Promise((resolve) => out.toBlob(resolve, 'image/jpeg', 0.9));
+      if (blob) return blob;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function pageToLines(page) {
   const content = await page.getTextContent();
   const groups = [];
@@ -162,6 +215,9 @@ async function parseCatalogPdf(file, onProgress) {
     const page = await doc.getPage(i);
     const lines = await pageToLines(page);
     const row = parsePage(lines);
+    const photoBlob = await extractMainPhoto(page);
+    if (photoBlob) row._photoBlob = photoBlob;
+    else row._warnings.push('foto (no se detectó automáticamente, sube manualmente)');
     const rowErrors = [];
     if (!row.codigo) rowErrors.push('Falta código');
     if (!row.nombre) rowErrors.push('Falta nombre');

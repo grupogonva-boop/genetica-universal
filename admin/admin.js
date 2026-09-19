@@ -111,10 +111,10 @@ async function readCatalogPdf(file){
     state.mode='pdf';state.file={name:file.name,size:file.size,sheet:null};state.headers=[];state.rawRows=[];state.mapping={};
     state.errors=[];state.warnings=[];
     state.rows=parsed.map((row,index)=>{
-      const {_errors,_warnings,_page,...data}=row;
+      const {_errors,_warnings,_page,_photoBlob,...data}=row;
       if(_errors.length)state.errors.push({row:_page,errors:_errors});
       if(_warnings.length)state.warnings.push({row:_page,codigo:data.codigo,nombre:data.nombre,warnings:_warnings});
-      return{...data,_errors};
+      return{...data,_errors,_photoBlob};
     });
     status.textContent='';
     $('#fileName').textContent=file.name;$('#fileMeta').textContent=`${state.rows.length} sementales · leídos del PDF · ${(file.size/1024/1024).toFixed(1)} MB`;
@@ -210,7 +210,25 @@ function renderPreview(){
   $('#publish').disabled=!state.rows.length||state.errors.length>0;
 }
 function resetFile(){state.headers=[];state.rawRows=[];state.mapping={};state.rows=[];state.errors=[];state.warnings=[];state.file=null;state.mode='excel';fileInput.value='';drop.hidden=false;$('#fileChip').hidden=true;$('#mappingPanel').hidden=true;$('#previewPanel').hidden=true;$('#validationWarnings').hidden=true;}
-$('#publish').addEventListener('click',async()=>{const button=$('#publish'),status=$('#publishStatus');button.disabled=true;status.textContent='Guardando el catálogo…';try{const rows=state.rows.map(({_errors,...row})=>row);const data=await api('/api/import',{method:'POST',body:JSON.stringify({filename:state.file.name,sheet:state.file.sheet,rows})});status.textContent=`✓ ${data.imported} sementales guardados correctamente.`;await loadCatalog();}catch(error){status.textContent=error.message;button.disabled=false;}});
+$('#publish').addEventListener('click',async()=>{
+  const button=$('#publish'),status=$('#publishStatus');button.disabled=true;
+  try{
+    const withPhoto=state.rows.filter(row=>row._photoBlob&&!row.foto);
+    for(let i=0;i<withPhoto.length;i++){
+      const row=withPhoto[i];
+      status.textContent=`Subiendo fotografías detectadas en el PDF… (${i+1}/${withPhoto.length})`;
+      try{
+        const file=new File([row._photoBlob],`${row.codigo||'foto'}.jpg`,{type:'image/jpeg'});
+        const {url}=await uploadFile(row.codigo,'main',file);
+        row.foto=url;
+      }catch(error){/* si falla una foto no se bloquea la carga; queda sin foto para subir manualmente */}
+    }
+    status.textContent='Guardando el catálogo…';
+    const rows=state.rows.map(({_errors,_photoBlob,...row})=>row);
+    const data=await api('/api/import',{method:'POST',body:JSON.stringify({filename:state.file.name,sheet:state.file.sheet,rows})});
+    status.textContent=`✓ ${data.imported} sementales guardados correctamente.`;await loadCatalog();
+  }catch(error){status.textContent=error.message;button.disabled=false;}
+});
 let catalogRows=[],catalogSearch='';
 async function loadCatalog(){try{const data=await api('/api/sires');catalogRows=data.sires||[];$('#totalSires').textContent=catalogRows.length;$('#activeSires').textContent=catalogRows.filter(row=>row.activo).length;$('#a2Sires').textContent=catalogRows.filter(row=>row.beta==='A2/A2').length;$('#lastImport').textContent=data.lastImport?new Date(data.lastImport).toLocaleDateString('es-MX'):'—';renderCatalogRows();}catch(error){$('#existingRows').innerHTML=`<tr><td colspan="8" class="empty">${escapeHtml(error.message)}</td></tr>`;}}
 function renderCatalogRows(){
@@ -242,8 +260,8 @@ $('#downloadTemplate').addEventListener('click',()=>{
   const example=FIELDS.map(field=>field.key.startsWith('trait_')?0:(exampleByKey[field.key]??''));
   const book=XLSX.utils.book_new(),sheet=XLSX.utils.aoa_to_sheet([headers,example]);XLSX.utils.book_append_sheet(book,sheet,'Sementales');XLSX.writeFile(book,'plantilla-sementales-genetica-universal.xlsx');
 });
-async function uploadFile(slot,file){
-  const form=new FormData();form.append('codigo','PROMO');form.append('slot',slot);form.append('file',file);
+async function uploadFile(codigo,slot,file){
+  const form=new FormData();form.append('codigo',codigo);form.append('slot',slot);form.append('file',file);
   const response=await fetch('/api/upload',{method:'POST',credentials:'same-origin',body:form});
   const data=await response.json().catch(()=>({error:'Respuesta inválida del servidor'}));
   if(!response.ok)throw new Error(data.error||'No se pudo subir el archivo');return data;
@@ -264,7 +282,7 @@ dropPromo.addEventListener('drop',event=>{const file=event.dataTransfer.files[0]
 promoInput.addEventListener('change',()=>{const file=promoInput.files[0];if(file)handlePromoUpload(file);});
 async function handlePromoUpload(file){
   try{
-    const {url}=await uploadFile('promo',file);
+    const {url}=await uploadFile('PROMO','promo',file);
     await api('/api/promotions',{method:'POST',body:JSON.stringify({url})});
     promoInput.value='';
     await loadPromotions();
