@@ -286,7 +286,10 @@ async function syncRemoteCatalog(){
   try{
     const response=await fetch(CONFIG.catalogApi,{signal:controller.signal,mode:'cors'});if(!response.ok)throw new Error('Catálogo remoto no disponible');const data=await response.json();if(!Array.isArray(data.sires)||!data.sires.length)return;
     const remote=new Map(data.sires.map(row=>[String(row.codigo||'').toUpperCase(),row]));
-    const merged=TOROS.map(base=>{const row=remote.get(base.codigo);if(!row)return base;remote.delete(base.codigo);return{...base,...row,codigo:base.codigo,foto:row.foto||base.foto};});
+    // Una vez que el catálogo remoto responde, es la fuente de verdad: un
+    // semental del respaldo estático que ya no exista ahí (borrado/dado de
+    // baja desde el admin) se descarta en vez de quedarse pegado para siempre.
+    const merged=TOROS.map(base=>{const row=remote.get(base.codigo);if(!row)return null;remote.delete(base.codigo);return{...base,...row,codigo:base.codigo,foto:row.foto||base.foto};}).filter(Boolean);
     remote.forEach(row=>{if(row.activo!==false)merged.push(row);});
     TOROS=merged.filter(t=>t.activo!==false);
     renderTable();renderHero();
