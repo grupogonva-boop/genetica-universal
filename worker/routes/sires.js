@@ -17,7 +17,7 @@ function shapeRow(row) {
 }
 
 export async function publicSires(env) {
-  const result = await env.DB.prepare('SELECT * FROM sires ORDER BY nm DESC, nombre ASC').all();
+  const result = await env.DB.prepare('SELECT * FROM sires WHERE activo=1 ORDER BY nm DESC, nombre ASC').all();
   return { sires: result.results.map(shapeRow) };
 }
 
