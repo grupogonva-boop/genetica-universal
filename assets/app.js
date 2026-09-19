@@ -32,7 +32,7 @@ function renderTable(){
   document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===sortKey;btn.classList.toggle('active',active);btn.querySelector('span').textContent=active?(sortDir===1?'↑':'↓'):'↕';});
   if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="26">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
   tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
-    <td class="compare-cell"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''} ${!compareSelection.includes(t.codigo)&&compareSelection.length>=3?'disabled':''}></td>
+    <td class="compare-cell"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}></td>
     <td class="sire-primary-cell"><div class="sire-id"><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>${Number(t.milkR)>90?'Probado':'Genómico'} · ${t.milkR}%</small></div></div></td>
     <td class="metric">${t.codigo}</td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
@@ -129,17 +129,21 @@ const COMPARE_PERF_FIELDS=[
   {key:'flc',label:'FLC',dir:'high',dec:2},
   {key:'hcc',label:'HCC',dir:'high',dec:2},
 ];
-function syncCompareCheckboxes(){document.querySelectorAll('.compare-check').forEach(cb=>{const on=compareSelection.includes(cb.dataset.codigo);cb.checked=on;cb.disabled=!on&&compareSelection.length>=COMPARE_MAX;});}
+function syncCompareCheckboxes(){document.querySelectorAll('.compare-check').forEach(cb=>{cb.checked=compareSelection.includes(cb.dataset.codigo);});}
 function renderCompareTray(){
   const tray=document.getElementById('compareTray');
   if(!compareSelection.length){showSelectedOnly=false;tray.hidden=true;tray.innerHTML='';return;}
   const bulls=compareSelection.map(codigo=>TOROS.find(t=>t.codigo===codigo)).filter(Boolean);
   tray.hidden=false;
+  let compareAction;
+  if(bulls.length>COMPARE_MAX)compareAction=`<small class="compare-hint">Máximo ${COMPARE_MAX} para comparar · quita alguno (${bulls.length} seleccionados)</small>`;
+  else if(bulls.length>=2)compareAction=`<button type="button" id="openCompare" class="btn btn-primary btn-sm">Comparar (${bulls.length})</button>`;
+  else compareAction=`<small class="compare-hint">Selecciona al menos 2 para comparar</small>`;
   tray.innerHTML=`<div class="compare-chips">${bulls.map(t=>`<span class="compare-chip">${t.nombre}<button type="button" data-remove-compare="${t.codigo}" aria-label="Quitar ${t.nombre} de la comparación">×</button></span>`).join('')}</div>
-  <div class="compare-tray-actions">${bulls.length>=2?`<button type="button" id="openCompare" class="btn btn-primary btn-sm">Comparar (${bulls.length})</button>`:`<small class="compare-hint">Selecciona al menos 2 para comparar</small>`}<button type="button" id="filterSelected" class="btn btn-ghost btn-sm${showSelectedOnly?' active':''}">${showSelectedOnly?'Ver todos':'Filtrar seleccionados'}</button><button type="button" id="clearCompare" class="text-btn">Quitar seleccionados</button></div>`;
+  <div class="compare-tray-actions">${compareAction}<button type="button" id="filterSelected" class="btn btn-ghost btn-sm${showSelectedOnly?' active':''}">${showSelectedOnly?'Ver todos':'Filtrar seleccionados'}</button><button type="button" id="clearCompare" class="text-btn">Quitar seleccionados</button></div>`;
 }
 function toggleCompare(codigo,checked){
-  if(checked){if(compareSelection.length>=COMPARE_MAX)return;compareSelection.push(codigo);}
+  if(checked)compareSelection.push(codigo);
   else compareSelection=compareSelection.filter(c=>c!==codigo);
   renderCompareTray();syncCompareCheckboxes();
   if(showSelectedOnly)renderTable();
@@ -198,7 +202,7 @@ function renderComparisonHTML(bulls){
 }
 function openCompareModal(){
   const bulls=compareSelection.map(codigo=>TOROS.find(t=>t.codigo===codigo)).filter(Boolean);
-  if(bulls.length<2)return;
+  if(bulls.length<2||bulls.length>COMPARE_MAX)return;
   document.getElementById('compareContent').innerHTML=renderComparisonHTML(bulls);
   document.getElementById('compareModalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('compareModalClose').focus();
 }
