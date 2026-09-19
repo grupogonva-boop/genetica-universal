@@ -1,7 +1,7 @@
 import { cleanText, cleanDataText } from './lib/validation.js';
 import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, purgeSire, bulkUpsertSires } from './routes/sires.js';
 import { handleUpload } from './routes/upload.js';
-import { listPromotions, addPromotion, deletePromotion } from './routes/promotions.js';
+import { listPromotions, addPromotion, updatePromotionLink, deletePromotion } from './routes/promotions.js';
 import { logAction, listAuditLog, diffSummary } from './lib/audit.js';
 
 const SESSION_COOKIE='gu_admin_session';
@@ -162,12 +162,20 @@ async function handleApi(request,env,url){
   if(url.pathname==='/api/promotions'&&request.method==='POST'){
     try{
       const body=await readJson(request);
-      const result=await addPromotion(env,body.url);
+      const result=await addPromotion(env,body.url,body.linkUrl);
       await logAction(env,session,'promotion.add',null,'Imagen agregada a promociones');
       return json(result,201);
     }catch(error){return json({error:error.message},error.status||400);}
   }
   const promoMatch=url.pathname.match(/^\/api\/promotions\/(\d+)$/);
+  if(promoMatch&&request.method==='PATCH'){
+    try{
+      const body=await readJson(request);
+      const result=await updatePromotionLink(env,Number(promoMatch[1]),body.linkUrl);
+      await logAction(env,session,'promotion.update',promoMatch[1],'Enlace de promoción actualizado');
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
+  }
   if(promoMatch&&request.method==='DELETE'){
     try{
       const result=await deletePromotion(env,Number(promoMatch[1]));

@@ -293,7 +293,7 @@ async function loadPromotions(){
     dots.onclick=e=>{const b=e.target.closest('i');if(!b)return;clearInterval(promoTimer);go(+b.dataset.i);play();};
     car.addEventListener('mouseenter',()=>clearInterval(promoTimer));
     car.addEventListener('mouseleave',play);
-    car.addEventListener('click',e=>{const slide=e.target.closest('.promo-slide');if(!slide)return;openPromoImage(items,slides.indexOf(slide));});
+    car.addEventListener('click',e=>{const slide=e.target.closest('.promo-slide');if(!slide)return;const item=items[slides.indexOf(slide)];if(item?.link_url){window.open(item.link_url,'_blank','noopener');return;}openPromoImage(items,slides.indexOf(slide));});
     play();
   }catch{/* Si falla, la sección se queda oculta sin interrumpir el resto del sitio. */}finally{clearTimeout(timeout);}
 }

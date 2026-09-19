@@ -269,11 +269,23 @@ async function uploadFile(codigo,slot,file){
 let promoItems=[];
 async function loadPromotions(){try{const data=await api('/api/promotions');promoItems=data.promotions||[];renderPromotions();}catch(error){console.error(error);}}
 function renderPromotions(){
-  $('#promoList').innerHTML=promoItems.map(p=>`<div class="promo-item"><img src="${p.url}" alt=""><button type="button" data-remove-promo="${p.id}" aria-label="Quitar imagen">×</button></div>`).join('');
+  $('#promoList').innerHTML=promoItems.map(p=>`<div class="promo-item-wrap">
+    <div class="promo-item"><img src="${p.url}" alt=""><button type="button" data-remove-promo="${p.id}" aria-label="Quitar imagen">×</button></div>
+    <input type="url" class="promo-link-input" data-link-id="${p.id}" placeholder="Enlace al dar clic (opcional)" value="${escapeHtml(p.link_url||'')}">
+  </div>`).join('');
   document.querySelectorAll('[data-remove-promo]').forEach(btn=>btn.addEventListener('click',async()=>{
     if(!confirm('¿Quitar esta imagen de promociones?'))return;
     try{await api(`/api/promotions/${btn.dataset.removePromo}`,{method:'DELETE'});await loadPromotions();}catch(error){alert(error.message);}
   }));
+  document.querySelectorAll('.promo-link-input').forEach(input=>{
+    input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
+    input.addEventListener('blur',async()=>{
+      const id=input.dataset.linkId,item=promoItems.find(p=>String(p.id)===String(id)),value=input.value.trim();
+      if((item?.link_url||'')===value)return;
+      try{const data=await api(`/api/promotions/${id}`,{method:'PATCH',body:JSON.stringify({linkUrl:value})});promoItems=data.promotions||promoItems;}
+      catch(error){alert(error.message);input.value=item?.link_url||'';}
+    });
+  });
 }
 const dropPromo=$('#dropPromo'),promoInput=dropPromo.querySelector('input');
 ['dragenter','dragover'].forEach(type=>dropPromo.addEventListener(type,event=>{event.preventDefault();dropPromo.classList.add('drag');}));
@@ -292,7 +304,7 @@ async function handlePromoUpload(file){
 const LOG_ACTION_LABELS={
   'sire.create':'Semental creado','sire.update':'Semental editado','sire.deactivate':'Semental dado de baja',
   'sire.restore':'Semental restaurado','sire.purge':'Semental borrado definitivo','sire.bulk_import':'Carga masiva',
-  'promotion.add':'Promoción agregada','promotion.remove':'Promoción quitada','upload':'Archivo subido','password.change':'Contraseña cambiada',
+  'promotion.add':'Promoción agregada','promotion.update':'Enlace de promoción actualizado','promotion.remove':'Promoción quitada','upload':'Archivo subido','password.change':'Contraseña cambiada',
 };
 async function loadLogs(){
   try{
