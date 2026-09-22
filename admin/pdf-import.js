@@ -206,6 +206,19 @@ function parsePage(lines) {
   return row;
 }
 
+// Algunas fichas sueltas (no el catálogo por lotes) vienen generadas con una
+// fuente "Tipo 3" sin texto real embebido: cada letra es un dibujo vectorial
+// indexado con nombres de glifo reciclados (p. ej. el código "A" puede dibujar
+// el trazo de un "5"), no un carácter Unicode real. PDF.js igual devuelve
+// letras sueltas ahí (por eso no basta con contar letras), pero nunca ninguna
+// de las palabras/etiquetas fijas que sí aparecen literalmente en toda ficha
+// real. Si ninguna de esas anclas aparece, el texto es, de hecho, ilegible.
+const TEXT_ANCHORS = ['Reg:', 'DOB:', 'CDCB', 'TPI', 'Haplotype:', 'NM$'];
+function isTextUnreadable(lines) {
+  const joined = lines.join('');
+  return !TEXT_ANCHORS.some((anchor) => joined.includes(anchor));
+}
+
 async function parseCatalogPdf(file, onProgress) {
   const buffer = await file.arrayBuffer();
   const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
@@ -219,10 +232,15 @@ async function parseCatalogPdf(file, onProgress) {
     if (photoBlob) row._photoBlob = photoBlob;
     else row._warnings.push('foto (no se detectó automáticamente, sube manualmente)');
     const rowErrors = [];
-    if (!row.codigo) rowErrors.push('Falta código');
-    if (!row.nombre) rowErrors.push('Falta nombre');
-    if (row.codigo && seen.has(row.codigo)) rowErrors.push('Código duplicado');
-    if (row.codigo) seen.add(row.codigo);
+    if (isTextUnreadable(lines)) {
+      row._warnings.length = 0;
+      rowErrors.push('Este PDF no tiene texto legible (usa una fuente sin texto real, típico de un PDF "impreso" desde otro sistema). No se puede leer automáticamente: agrega este semental a mano desde "+ Nuevo semental", o pide el PDF original con texto seleccionable.');
+    } else {
+      if (!row.codigo) rowErrors.push('Falta código');
+      if (!row.nombre) rowErrors.push('Falta nombre');
+      if (row.codigo && seen.has(row.codigo)) rowErrors.push('Código duplicado');
+      if (row.codigo) seen.add(row.codigo);
+    }
     rows.push({ ...row, _errors: rowErrors, _page: i });
     if (onProgress) onProgress(i, doc.numPages);
   }
