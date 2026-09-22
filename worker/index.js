@@ -2,6 +2,7 @@ import { cleanText, cleanDataText } from './lib/validation.js';
 import { publicSires, listSires, getSire, createSire, updateSire, setSireActive, purgeSire, bulkUpsertSires } from './routes/sires.js';
 import { handleUpload } from './routes/upload.js';
 import { listPromotions, addPromotion, updatePromotionLink, deletePromotion } from './routes/promotions.js';
+import { listPartners, addPartner, updatePartner, deletePartner } from './routes/partners.js';
 import { logAction, listAuditLog, diffSummary } from './lib/audit.js';
 
 const SESSION_COOKIE='gu_admin_session';
@@ -57,7 +58,7 @@ async function loginLimited(request,env){
 async function recordLoginFailure(request,env){const ip=request.headers.get('cf-connecting-ip')||'unknown',digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip)),key=base64url(new Uint8Array(digest));await env.DB.prepare('UPDATE login_attempts SET attempts = attempts + 1 WHERE ip_hash = ?1').bind(key).run();}
 
 async function handleApi(request,env,url){
-  if(request.method==='OPTIONS'&&(url.pathname==='/api/public/sires'||url.pathname==='/api/public/promotions')){const headers=publicCors(request,env);return new Response(null,{status:204,headers:{...headers,'access-control-allow-methods':'GET, OPTIONS'}});}
+  if(request.method==='OPTIONS'&&['/api/public/sires','/api/public/promotions','/api/public/partners'].includes(url.pathname)){const headers=publicCors(request,env);return new Response(null,{status:204,headers:{...headers,'access-control-allow-methods':'GET, OPTIONS'}});}
   if(url.pathname==='/api/public/sires'&&request.method==='GET'){
     const data=await publicSires(env);
     return json(data,200,{...publicCors(request,env),'cache-control':'public, max-age=300'});
@@ -65,6 +66,10 @@ async function handleApi(request,env,url){
   if(url.pathname==='/api/public/promotions'&&request.method==='GET'){
     const data=await listPromotions(env);
     return json(data,200,{...publicCors(request,env),'cache-control':'public, max-age=120'});
+  }
+  if(url.pathname==='/api/public/partners'&&request.method==='GET'){
+    const data=await listPartners(env);
+    return json(data,200,{...publicCors(request,env),'cache-control':'public, max-age=300'});
   }
   if(!['GET','HEAD'].includes(request.method)&&!sameOrigin(request))return json({error:'Origen no autorizado'},403);
   if(url.pathname==='/api/login'&&request.method==='POST'){
@@ -180,6 +185,31 @@ async function handleApi(request,env,url){
     try{
       const result=await deletePromotion(env,Number(promoMatch[1]));
       await logAction(env,session,'promotion.remove',promoMatch[1],'Imagen quitada de promociones');
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
+  }
+
+  if(url.pathname==='/api/partners'&&request.method==='GET')return json(await listPartners(env));
+  if(url.pathname==='/api/partners'&&request.method==='POST'){
+    try{
+      const result=await addPartner(env,await readJson(request));
+      await logAction(env,session,'partner.add',null,'Partner agregado');
+      return json(result,201);
+    }catch(error){return json({error:error.message},error.status||400);}
+  }
+  const partnerMatch=url.pathname.match(/^\/api\/partners\/(\d+)$/);
+  if(partnerMatch&&request.method==='PATCH'){
+    try{
+      const body=await readJson(request);
+      const result=await updatePartner(env,Number(partnerMatch[1]),body);
+      await logAction(env,session,'partner.update',partnerMatch[1],`Partner editado: ${body.name||''}`);
+      return json(result);
+    }catch(error){return json({error:error.message},error.status||400);}
+  }
+  if(partnerMatch&&request.method==='DELETE'){
+    try{
+      const result=await deletePartner(env,Number(partnerMatch[1]));
+      await logAction(env,session,'partner.remove',partnerMatch[1],'Partner quitado');
       return json(result);
     }catch(error){return json({error:error.message},error.status||400);}
   }

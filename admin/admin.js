@@ -74,7 +74,7 @@ async function api(path,options={}){
   if(!response.ok)throw new Error(data.error||'No se pudo completar la operación');return data;
 }
 let sessionEmail=null;
-function showDashboard(email,isOwner){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();loadPromotions();$('#logsPanel').hidden=!isOwner;if(isOwner)loadLogs();}
+function showDashboard(email,isOwner){sessionEmail=email;$('#loginView').hidden=true;$('#changePasswordView').hidden=true;$('#dashboard').hidden=false;$('#currentUser').textContent=email;loadCatalog();loadPromotions();loadPartners();$('#logsPanel').hidden=!isOwner;if(isOwner)loadLogs();}
 function showChangePassword(email){sessionEmail=email;$('#loginView').hidden=true;$('#dashboard').hidden=true;$('#changePasswordView').hidden=false;}
 function enterApp(email,forceChange,isOwner){forceChange?showChangePassword(email):showDashboard(email,isOwner);}
 async function restoreSession(){try{const data=await api('/api/session');if(data.authenticated)enterApp(data.email,data.mustChangePassword,data.isOwner);}catch{}}
@@ -301,10 +301,58 @@ async function handlePromoUpload(file){
   }catch(error){alert(error.message);}
 }
 
+let partnerItems=[];
+async function loadPartners(){try{const data=await api('/api/partners');partnerItems=data.partners||[];renderPartners();}catch(error){console.error(error);}}
+function renderPartners(){
+  $('#partnerList').innerHTML=partnerItems.map(p=>`<div class="partner-item-wrap">
+    <div class="promo-item"><img src="${p.image_url}" alt=""><button type="button" data-remove-partner="${p.id}" aria-label="Quitar partner">×</button></div>
+    <input type="text" class="partner-field" data-id="${p.id}" data-field="name" placeholder="Nombre" value="${escapeHtml(p.name)}">
+    <input type="url" class="partner-field" data-id="${p.id}" data-field="linkUrl" placeholder="Link (opcional)" value="${escapeHtml(p.link_url||'')}">
+    <div class="partner-extra-row">
+      <input type="text" class="partner-field partner-badge" data-id="${p.id}" data-field="badge" placeholder="Insignia (ej. A2)" maxlength="12" value="${escapeHtml(p.badge||'')}">
+      <label class="partner-featured-label"><input type="checkbox" class="partner-field" data-id="${p.id}" data-field="featured" ${p.featured?'checked':''}> Destacado</label>
+    </div>
+  </div>`).join('');
+  document.querySelectorAll('[data-remove-partner]').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(!confirm('¿Quitar este partner del pie de página?'))return;
+    try{await api(`/api/partners/${btn.dataset.removePartner}`,{method:'DELETE'});await loadPartners();}catch(error){alert(error.message);}
+  }));
+  document.querySelectorAll('.partner-field').forEach(field=>{
+    const commit=async()=>{
+      const id=field.dataset.id,item=partnerItems.find(p=>String(p.id)===String(id));
+      if(!item)return;
+      const payload={name:item.name,imageUrl:item.image_url,linkUrl:item.link_url||'',badge:item.badge||'',featured:item.featured};
+      payload[field.dataset.field]=field.type==='checkbox'?field.checked:field.value.trim();
+      try{const data=await api(`/api/partners/${id}`,{method:'PATCH',body:JSON.stringify(payload)});partnerItems=data.partners||partnerItems;renderPartners();}
+      catch(error){alert(error.message);renderPartners();}
+    };
+    if(field.type==='checkbox')field.addEventListener('change',commit);
+    else{
+      field.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();field.blur();}});
+      field.addEventListener('blur',commit);
+    }
+  });
+}
+const dropPartner=$('#dropPartner'),partnerInput=dropPartner.querySelector('input');
+['dragenter','dragover'].forEach(type=>dropPartner.addEventListener(type,event=>{event.preventDefault();dropPartner.classList.add('drag');}));
+['dragleave','drop'].forEach(type=>dropPartner.addEventListener(type,event=>{event.preventDefault();dropPartner.classList.remove('drag');}));
+dropPartner.addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file)handlePartnerUpload(file);});
+partnerInput.addEventListener('change',()=>{const file=partnerInput.files[0];if(file)handlePartnerUpload(file);});
+async function handlePartnerUpload(file){
+  try{
+    const {url}=await uploadFile('PARTNER','partner',file);
+    await api('/api/partners',{method:'POST',body:JSON.stringify({name:'Nuevo partner',imageUrl:url})});
+    partnerInput.value='';
+    await loadPartners();
+  }catch(error){alert(error.message);}
+}
+
 const LOG_ACTION_LABELS={
   'sire.create':'Semental creado','sire.update':'Semental editado','sire.deactivate':'Semental dado de baja',
   'sire.restore':'Semental restaurado','sire.purge':'Semental borrado definitivo','sire.bulk_import':'Carga masiva',
-  'promotion.add':'Promoción agregada','promotion.update':'Enlace de promoción actualizado','promotion.remove':'Promoción quitada','upload':'Archivo subido','password.change':'Contraseña cambiada',
+  'promotion.add':'Promoción agregada','promotion.update':'Enlace de promoción actualizado','promotion.remove':'Promoción quitada',
+  'partner.add':'Partner agregado','partner.update':'Partner editado','partner.remove':'Partner quitado',
+  'upload':'Archivo subido','password.change':'Contraseña cambiada',
 };
 async function loadLogs(){
   try{

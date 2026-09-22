@@ -30,6 +30,14 @@
 .promo-item button:hover{background:var(--red)}
 .promo-item-wrap{display:flex;flex-direction:column;gap:7px}
 .promo-link-input{margin-top:0;padding:8px 10px;font-size:.66rem}
+.partner-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:14px}
+.partner-item-wrap{display:flex;flex-direction:column;gap:7px;padding:10px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.018)}
+.partner-item-wrap .promo-item{aspect-ratio:16/10;background:#fff}
+.partner-field{margin-top:0;padding:8px 10px;font-size:.66rem}
+.partner-extra-row{display:flex;align-items:center;gap:10px}
+.partner-badge{flex:1}
+.partner-featured-label{display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap;color:#a9abb4;font-size:.62rem;font-weight:600}
+.partner-featured-label input{width:auto;margin:0}
 .ancestor-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .ancestor-row{display:grid;grid-template-columns:110px 1fr 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:11px;background:#0e1016}
 .ancestor-row label{margin:0}

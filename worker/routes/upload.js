@@ -2,7 +2,7 @@ import { addFichaHeader } from '../lib/ficha-header.js';
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
-const SLOTS = new Set(['main', 'extra', 'ancestor', 'ficha', 'promo']);
+const SLOTS = new Set(['main', 'extra', 'ancestor', 'ficha', 'promo', 'partner']);
 const PUBLIC_MEDIA_BASE = 'https://media.geneticauniversal.com/';
 
 // Detecta el tipo real por los primeros bytes del archivo — no confiamos en
@@ -28,7 +28,7 @@ export async function handleUpload(request, env, session) {
   const codigo = String(form.get('codigo') || '').trim().toUpperCase();
 
   if (!SLOTS.has(slot)) { const e = new Error('Tipo de archivo desconocido.'); e.status = 400; throw e; }
-  if (slot !== 'promo' && !/^[A-Z0-9]{3,20}$/.test(codigo)) { const e = new Error('Código de semental inválido.'); e.status = 400; throw e; }
+  if (!['promo', 'partner'].includes(slot) && !/^[A-Z0-9]{3,20}$/.test(codigo)) { const e = new Error('Código de semental inválido.'); e.status = 400; throw e; }
   if (!(file instanceof File)) { const e = new Error('No se recibió ningún archivo.'); e.status = 400; throw e; }
 
   let buffer = new Uint8Array(await file.arrayBuffer());
@@ -49,6 +49,7 @@ export async function handleUpload(request, env, session) {
 
   const key = slot === 'ficha' ? `fichas/${codigo}.pdf`
     : slot === 'promo' ? `promos/${await shortHash(buffer)}.${type.ext}`
+    : slot === 'partner' ? `partners/${await shortHash(buffer)}.${type.ext}`
     : `bulls/${codigo}/${slot}-${await shortHash(buffer)}.${type.ext}`;
 
   await env.MEDIA.put(key, buffer, {

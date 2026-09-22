@@ -1,4 +1,4 @@
-const CONFIG={whatsapp:"524491793772",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",promotionsApi:"https://admin.geneticauniversal.com/api/public/promotions",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
+const CONFIG={whatsapp:"524491793772",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",promotionsApi:"https://admin.geneticauniversal.com/api/public/promotions",partnersApi:"https://admin.geneticauniversal.com/api/public/partners",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
 let TOROS=Array.isArray(window.SIRE_CATALOG)?window.SIRE_CATALOG:[];
 let activeF="all",searchTerm="",sortKey="tpi",sortDir=-1,columnFilters={},fichaStep=0,imageViewerTrigger=null;
 const waLink=(m)=>`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(m)}`;
@@ -308,6 +308,29 @@ function openPromoImage(items,startIndex){
   document.getElementById('imageViewerClose').focus();
 }
 loadPromotions();
+
+/* Logos de "Partners y proveedores" del pie de página — editables desde admin. */
+async function loadPartners(){
+  if(!CONFIG.partnersApi)return;
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),3500);
+  try{
+    const response=await fetch(CONFIG.partnersApi,{signal:controller.signal,mode:'cors'});
+    if(!response.ok)throw new Error('Partners no disponibles');
+    const data=await response.json();
+    const items=Array.isArray(data.partners)?data.partners:[];
+    const section=document.getElementById('partners');
+    if(!items.length){section.hidden=true;return;}
+    document.getElementById('partnerGrid').innerHTML=items.map(p=>{
+      const inner=`${p.badge?`<i class="partner-a2">${p.badge}</i>`:''}<img src="${p.image_url}" alt="${p.name}"><span>Visitar sitio ↗</span>`;
+      const cls=`partner${p.featured?' partner-featured':''}`;
+      return p.link_url
+        ?`<a class="${cls}" href="${p.link_url}" target="_blank" rel="noopener noreferrer" aria-label="Visitar ${p.name}">${inner}</a>`
+        :`<div class="${cls}" aria-label="${p.name}">${inner}</div>`;
+    }).join('');
+    section.hidden=false;
+  }catch{/* Si falla, la sección se queda oculta sin interrumpir el resto del sitio. */}finally{clearTimeout(timeout);}
+}
+loadPartners();
 
 /* Profundidad sutil del hero para punteros precisos; sin movimiento en touch o accesibilidad reducida. */
 (function initHeroDepth(){
