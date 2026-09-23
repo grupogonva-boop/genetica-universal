@@ -1,16 +1,11 @@
 const CONFIG={whatsapp:"524491793772",catalogApi:"https://admin.geneticauniversal.com/api/public/sires",promotionsApi:"https://admin.geneticauniversal.com/api/public/promotions",partnersApi:"https://admin.geneticauniversal.com/api/public/partners",msgGeneral:"Hola Genética Universal, me interesa recibir asesoría sobre sus sementales.",msgToro:(t)=>`Hola, me interesa el toro ${t.nombre} (${t.codigo}). ¿Me pueden cotizar?`};
 let TOROS=Array.isArray(window.SIRE_CATALOG)?window.SIRE_CATALOG:[];
-let activeF="all",searchTerm="",sortKey="tpi",sortDir=-1,columnFilters={},fichaStep=0,imageViewerTrigger=null;
+let searchTerm="",sortKey="tpi",sortDir=-1,columnFilters={},fichaStep=0,imageViewerTrigger=null;
 const waLink=(m)=>`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(m)}`;
 const {isQ,availability,signed,buildGallery}=window.FichaRender;
 const NUMERIC_COLS=['tpi','nm','milk','cfp','fat','fatPct','protein','proteinPct','sce','scs','pl','dpr','ccr','ptat','udc','flc','hcc'];
 let showSelectedOnly=false,selectedOnlySnapshot=[];
 function pass(t){
-  if(activeF==="a2"&&t.beta!=="A2/A2")return false;
-  if(activeF==="sex"&&!['sex','conv-sex'].includes(t.disponibilidad))return false;
-  if(activeF==="conv"&&!['conv','conv-sex','s-conv'].includes(t.disponibilidad))return false;
-  if(activeF==="proven"&&Number(t.milkR)<=90)return false;
-  if(activeF==="genomic"&&Number(t.milkR)>90)return false;
   if(showSelectedOnly&&!selectedOnlySnapshot.includes(t.codigo))return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+t.sireName+" "+t.damName+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
   for(const [key,value] of Object.entries(columnFilters)){
@@ -71,16 +66,21 @@ function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(pho
   const shareBtn=e.target.closest('.ficha-share');
   if(shareBtn){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];shareBullLink(t,shareBtn);}
 }
-async function shareBullLink(t,button){
-  const url=`https://geneticauniversal.com/toro/${encodeURIComponent(t.codigo)}`;
-  if(navigator.share){try{await navigator.share({title:`${t.nombre} · ${t.codigo}`,text:`Mira la ficha de ${t.nombre} en Genética Universal`,url});return;}catch{return;}}
-  const label=button?.querySelector('.ficha-share-label');
+async function shareLink(url,title,text,label){
+  if(navigator.share){try{await navigator.share({title,text,url});return;}catch{return;}}
   try{
     await navigator.clipboard.writeText(url);
     if(label){const original=label.textContent;label.textContent='¡Enlace copiado!';setTimeout(()=>{label.textContent=original;},2000);}
   }catch{prompt('Copia este enlace:',url);}
 }
+function shareBullLink(t,button){
+  const label=button?.querySelector('.ficha-share-label');
+  shareLink(`https://geneticauniversal.com/toro/${encodeURIComponent(t.codigo)}`,`${t.nombre} · ${t.codigo}`,`Mira la ficha de ${t.nombre} en Genética Universal`,label);
+}
 document.getElementById('fichaContent').addEventListener('click',handleFichaClick);
+document.getElementById('shareCatalogBtn')?.addEventListener('click',()=>{
+  shareLink('https://geneticauniversal.com/catalogo','Catálogo completo · Genética Universal','Mira el catálogo completo de sementales en Genética Universal',document.getElementById('shareCatalogLabel'));
+});
 let galleryImages=[],galleryIndex=0;
 function renderGalleryImage(){const item=galleryImages[galleryIndex],img=document.getElementById('imageViewerImg');img.src=item.foto;img.alt=`Fotografía ampliada de ${item.label}`;document.getElementById('imageViewerTitle').textContent=item.label;const multi=galleryImages.length>1;document.getElementById('imageViewerPrev').hidden=!multi;document.getElementById('imageViewerNext').hidden=!multi;}
 function navGallery(delta){galleryIndex=(galleryIndex+delta+galleryImages.length)%galleryImages.length;renderGalleryImage();}
@@ -222,7 +222,7 @@ document.getElementById('compareModalClose').addEventListener('click',closeCompa
 document.getElementById('compareModalBack').addEventListener('click',e=>{if(e.target.id==='compareModalBack')closeCompareModal();});
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(closeBullImage())return;if(closeCompareModal())return;if(closeCatalogModal())return;closeModal();}});
-document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');const mode=b.dataset.f;if(mode==='tpi'||mode==='nm'){activeF='all';sortKey=mode;sortDir=-1;}else{activeF=mode;sortKey=null;sortDir=1;}renderTable();});
+document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');const mode=b.dataset.f;if(mode==='tpi'||mode==='nm'){sortKey=mode;sortDir=-1;}else{sortKey=null;sortDir=1;}renderTable();});
 document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value;renderTable();});
 document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=['nombre','codigo','beta','kappa','disponibilidad','sireName','damName'].includes(key)?1:-1;}renderTable();}));
 document.querySelectorAll('.column-filters input,.column-filters select').forEach(input=>input.addEventListener('input',()=>{
@@ -231,7 +231,7 @@ document.querySelectorAll('.column-filters input,.column-filters select').forEac
   else columnFilters[col]=input.value.trim();
   renderTable();
 }));
-document.getElementById('clearFilters').addEventListener('click',()=>{activeF='all';searchTerm='';sortKey='tpi';sortDir=-1;columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach(chip=>chip.classList.toggle('active',chip.dataset.f==='tpi'));renderTable();});
+document.getElementById('clearFilters').addEventListener('click',()=>{searchTerm='';sortKey='tpi';sortDir=-1;columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach(chip=>chip.classList.toggle('active',chip.dataset.f==='tpi'));renderTable();});
 const nameColumnToggle=document.getElementById('toggleNameColumn');
 nameColumnToggle?.addEventListener('click',()=>{const table=document.querySelector('.sire-table'),collapsed=table.classList.toggle('name-collapsed');nameColumnToggle.setAttribute('aria-expanded',String(!collapsed));nameColumnToggle.setAttribute('aria-label',collapsed?'Expandir la columna del nombre':'Contraer la columna del nombre');nameColumnToggle.title=collapsed?'Expandir nombre del toro':'Contraer nombre del toro';nameColumnToggle.querySelector('span').textContent=collapsed?'›':'‹';});
 document.getElementById('navToggle').addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('show'));
@@ -262,6 +262,12 @@ function tryOpenSharedFicha(){
   openModal(target);
 }
 tryOpenSharedFicha();
+
+/* Enlace compartido del catálogo completo (?catalogo=1): abre el catálogo. */
+if(new URLSearchParams(location.search).has('catalogo')){
+  document.getElementById('catalogo')?.scrollIntoView({block:'start'});
+  openCatalogModal();
+}
 
 /* La simulación del laboratorio sólo se anima al entrar en pantalla. */
 (function(){
