@@ -5,7 +5,9 @@
   "compatibility_date": "2026-08-12",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
-    { "pattern": "admin.geneticauniversal.com", "custom_domain": true }
+    { "pattern": "admin.geneticauniversal.com", "custom_domain": true },
+    { "pattern": "geneticauniversal.com/toro/*", "zone_name": "geneticauniversal.com" },
+    { "pattern": "www.geneticauniversal.com/toro/*", "zone_name": "geneticauniversal.com" }
   ],
   "assets": {
     "directory": "./admin",

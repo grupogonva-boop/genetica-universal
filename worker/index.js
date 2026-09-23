@@ -49,6 +49,43 @@ async function mustChangePassword(email,env){
 async function readJson(request){const length=Number(request.headers.get('content-length')||0);if(!length||length>MAX_BODY_BYTES)throw new Error('Tamaño de solicitud inválido');return request.json();}
 function sameOrigin(request){const origin=request.headers.get('origin');return origin===new URL(request.url).origin;}
 function publicCors(request,env){const origin=request.headers.get('origin');const allowed=(env.PUBLIC_ORIGINS||'').split(',').map(value=>value.trim());return allowed.includes(origin)?{'access-control-allow-origin':origin,'vary':'Origin'}:{};}
+
+// Enlace para compartir un toro (ej. por WhatsApp) con vista previa enriquecida:
+// /toro/:codigo. Un bot de vista previa (WhatsApp, Facebook, etc.) recibe una
+// página mínima con etiquetas Open Graph (foto real, nombre, TPI/NM$); una
+// persona real recibe un redirect directo a su ficha en el catálogo.
+const SHARE_BOT_UA=/facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|SkypeUriPreview|Pinterest|vkShare|redditbot|Googlebot|bingbot|Applebot|W3C_Validator/i;
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const PUBLIC_SITE_BASE='https://geneticauniversal.com';
+async function handleShareLink(request,env,url){
+  const match=url.pathname.match(/^\/toro\/([A-Za-z0-9]{3,20})/i);
+  const codigo=match?match[1].toUpperCase():'';
+  const row=codigo?await env.DB.prepare('SELECT nombre,codigo,foto,tpi,nm,beta,kappa FROM sires WHERE codigo=?1 AND activo=1').bind(codigo).first():null;
+  if(!row)return Response.redirect(PUBLIC_SITE_BASE+'/',302);
+  const destination=`${PUBLIC_SITE_BASE}/?toro=${encodeURIComponent(row.codigo)}`;
+  const ua=request.headers.get('user-agent')||'';
+  if(!SHARE_BOT_UA.test(ua))return Response.redirect(destination,302);
+  const title=`${row.nombre} · ${row.codigo} · Genética Universal`;
+  const parts=[];
+  if(row.tpi!=null)parts.push(`TPI ${row.tpi}`);
+  if(row.nm!=null)parts.push(`NM$ ${row.nm>=0?'+':''}${row.nm}`);
+  if(row.beta)parts.push(row.beta);
+  if(row.kappa)parts.push(`Kappa ${row.kappa}`);
+  const description=parts.join(' · ')||'Ficha genómica 360° en Genética Universal';
+  const rawImage=row.foto||'assets/media/asset-01-a51888de9c.png';
+  const image=/^https?:\/\//i.test(rawImage)?rawImage:`${PUBLIC_SITE_BASE}/${rawImage.replace(/^\/+/,'')}`;
+  const html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+<meta property="og:title" content="${escapeHtml(title)}">
+<meta property="og:description" content="${escapeHtml(description)}">
+<meta property="og:image" content="${escapeHtml(image)}">
+<meta property="og:url" content="${escapeHtml(destination)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Genética Universal">
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="refresh" content="0;url=${escapeHtml(destination)}">
+</head><body>Abriendo la ficha de ${escapeHtml(row.nombre)}… <a href="${escapeHtml(destination)}">Ver ficha</a></body></html>`;
+  return new Response(html,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'public, max-age=300'}});
+}
 async function loginLimited(request,env){
   const ip=request.headers.get('cf-connecting-ip')||'unknown',digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip)),key=base64url(new Uint8Array(digest));const now=Date.now(),windowMs=15*60*1000;
   const row=await env.DB.prepare('SELECT attempts, window_started FROM login_attempts WHERE ip_hash = ?1').bind(key).first();
@@ -237,6 +274,7 @@ export default{
     const url=new URL(request.url);
     try{
       if(url.pathname.startsWith('/api/'))return await handleApi(request,env,url);
+      if(url.pathname.startsWith('/toro/'))return await handleShareLink(request,env,url);
       const response=await env.ASSETS.fetch(request),headers=new Headers(response.headers);headers.set('x-content-type-options','nosniff');headers.set('referrer-policy','strict-origin-when-cross-origin');headers.set('permissions-policy','camera=(), microphone=(), geolocation=()');headers.set('content-security-policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
     }catch(error){console.error(JSON.stringify({message:'request failed',path:url.pathname,error:error instanceof Error?error.message:String(error)}));return url.pathname.startsWith('/api/')?json({error:'Error interno del administrador'},500):new Response('Error interno',{status:500});}
   }

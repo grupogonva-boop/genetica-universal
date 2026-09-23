@@ -67,7 +67,19 @@ function openModal(t){
   document.getElementById('fichaContent').dataset.toro=TOROS.indexOf(t);document.getElementById('modalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('modalClose').focus();
 }
 function navFicha(delta){const list=sortedFilteredList();if(list.length<2)return;const current=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];let i=list.indexOf(current);if(i===-1)i=0;const next=list[(i+delta+list.length)%list.length];openModal(next);}
-function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(photo){openBullImage(TOROS[Number(document.getElementById('fichaContent').dataset.toro)],photo);return;}const ancestorPhoto=e.target.closest('.catalog-ancestor-photo');if(ancestorPhoto){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)],ancestors=Array.isArray(t.ancestors)&&t.ancestors.length?t.ancestors:(t.ancestorPhoto?[t.ancestorPhoto]:[]),target=ancestors[Number(ancestorPhoto.dataset.ancestorIndex||0)],offset=buildGallery(t).findIndex(item=>item.foto===target?.foto);openBullImage(t,ancestorPhoto,offset<0?0:offset);return;}if(e.target.closest('.ficha-nav-prev')){navFicha(-1);return;}if(e.target.closest('.ficha-nav-next')){navFicha(1);return;}if(e.target.closest('.ficha-quote')){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];window.open(waLink(CONFIG.msgToro(t)),'_blank','noopener');}}
+function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(photo){openBullImage(TOROS[Number(document.getElementById('fichaContent').dataset.toro)],photo);return;}const ancestorPhoto=e.target.closest('.catalog-ancestor-photo');if(ancestorPhoto){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)],ancestors=Array.isArray(t.ancestors)&&t.ancestors.length?t.ancestors:(t.ancestorPhoto?[t.ancestorPhoto]:[]),target=ancestors[Number(ancestorPhoto.dataset.ancestorIndex||0)],offset=buildGallery(t).findIndex(item=>item.foto===target?.foto);openBullImage(t,ancestorPhoto,offset<0?0:offset);return;}if(e.target.closest('.ficha-nav-prev')){navFicha(-1);return;}if(e.target.closest('.ficha-nav-next')){navFicha(1);return;}if(e.target.closest('.ficha-quote')){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];window.open(waLink(CONFIG.msgToro(t)),'_blank','noopener');return;}
+  const shareBtn=e.target.closest('.ficha-share');
+  if(shareBtn){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];shareBullLink(t,shareBtn);}
+}
+async function shareBullLink(t,button){
+  const url=`https://geneticauniversal.com/toro/${encodeURIComponent(t.codigo)}`;
+  if(navigator.share){try{await navigator.share({title:`${t.nombre} · ${t.codigo}`,text:`Mira la ficha de ${t.nombre} en Genética Universal`,url});return;}catch{return;}}
+  const label=button?.querySelector('.ficha-share-label');
+  try{
+    await navigator.clipboard.writeText(url);
+    if(label){const original=label.textContent;label.textContent='¡Enlace copiado!';setTimeout(()=>{label.textContent=original;},2000);}
+  }catch{prompt('Copia este enlace:',url);}
+}
 document.getElementById('fichaContent').addEventListener('click',handleFichaClick);
 let galleryImages=[],galleryIndex=0;
 function renderGalleryImage(){const item=galleryImages[galleryIndex],img=document.getElementById('imageViewerImg');img.src=item.foto;img.alt=`Fotografía ampliada de ${item.label}`;document.getElementById('imageViewerTitle').textContent=item.label;const multi=galleryImages.length>1;document.getElementById('imageViewerPrev').hidden=!multi;document.getElementById('imageViewerNext').hidden=!multi;}
@@ -237,6 +249,20 @@ const cio=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){ac(
 document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
 renderTable();
 
+/* Enlaces compartidos de un toro (?toro=CODIGO): abre su ficha automáticamente. */
+let sharedFichaOpened=false;
+function tryOpenSharedFicha(){
+  if(sharedFichaOpened)return;
+  const codigo=new URLSearchParams(location.search).get('toro');
+  if(!codigo)return;
+  const target=TOROS.find(t=>t.codigo===codigo.toUpperCase());
+  if(!target)return;
+  sharedFichaOpened=true;
+  document.getElementById('catalogo')?.scrollIntoView({block:'start'});
+  openModal(target);
+}
+tryOpenSharedFicha();
+
 /* La simulación del laboratorio sólo se anima al entrar en pantalla. */
 (function(){
   const consoleEl=document.getElementById('labConsole');if(!consoleEl)return;
@@ -354,7 +380,7 @@ async function syncRemoteCatalog(){
     const merged=TOROS.map(base=>{const row=remote.get(base.codigo);if(!row)return null;remote.delete(base.codigo);return{...base,...row,codigo:base.codigo,foto:row.foto||base.foto};}).filter(Boolean);
     remote.forEach(row=>{if(row.activo!==false)merged.push(row);});
     TOROS=merged.filter(t=>t.activo!==false);
-    renderTable();renderHero();
+    renderTable();renderHero();tryOpenSharedFicha();
   }catch{/* El catálogo incluido sigue siendo el respaldo sin interrumpir la web. */}finally{clearTimeout(timeout);}
 }
 syncRemoteCatalog();
