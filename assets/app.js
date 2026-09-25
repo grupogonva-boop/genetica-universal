@@ -25,10 +25,9 @@ function renderTable(){
   const list=sortedFilteredList();
   document.getElementById('tableCount').textContent=`${list.length} ${list.length===1?'semental':'sementales'}`;
   document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===sortKey;btn.classList.toggle('active',active);btn.querySelector('span').textContent=active?(sortDir===1?'↑':'↓'):'↕';});
-  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="26">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="25">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
   tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
-    <td class="compare-cell"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}></td>
-    <td class="sire-primary-cell"><div class="sire-id"><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>${Number(t.milkR)>90?'Probado':'Genómico'} · ${t.milkR}%</small></div></div></td>
+    <td class="sire-primary-cell"><div class="sire-id"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>${Number(t.milkR)>90?'Probado':'Genómico'} · ${t.milkR}%</small></div></div></td>
     <td class="metric">${t.codigo}</td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
     <td class="metric">${t.tpi}</td>
@@ -54,7 +53,7 @@ function renderTable(){
     <td class="table-name-cell" title="${t.damName}"><span class="table-name-text">${t.damName}</span></td>
     <td><span class="row-open">›</span></td>
   </tr>`).join('');
-  tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{if(e.target.closest('.compare-cell'))return;const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button')||e.target.closest('.compare-cell'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
+  tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{if(e.target.closest('.compare-check'))return;const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button')||e.target.closest('.compare-check'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
   tbody.querySelectorAll('.compare-check').forEach(cb=>cb.addEventListener('change',()=>toggleCompare(cb.dataset.codigo,cb.checked)));
 }
 function openModal(t){
@@ -223,13 +222,15 @@ document.getElementById('compareModalBack').addEventListener('click',e=>{if(e.ta
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(closeBullImage())return;if(closeCompareModal())return;if(closeCatalogModal())return;closeModal();}});
 document.getElementById('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');const mode=b.dataset.f;if(mode==='tpi'||mode==='nm'){sortKey=mode;sortDir=-1;}else{sortKey=null;sortDir=1;}renderTable();});
-document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value;renderTable();});
+let filterRenderTimer;
+function debouncedRenderTable(){clearTimeout(filterRenderTimer);filterRenderTimer=setTimeout(renderTable,200);}
+document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value;debouncedRenderTable();});
 document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=['nombre','codigo','beta','kappa','disponibilidad','sireName','damName'].includes(key)?1:-1;}renderTable();}));
 document.querySelectorAll('.column-filters input,.column-filters select').forEach(input=>input.addEventListener('input',()=>{
   const col=input.dataset.col,bound=input.dataset.bound;
   if(bound){columnFilters[col]=(columnFilters[col]&&typeof columnFilters[col]==='object')?columnFilters[col]:{};columnFilters[col][bound]=input.value.trim();}
   else columnFilters[col]=input.value.trim();
-  renderTable();
+  debouncedRenderTable();
 }));
 document.getElementById('clearFilters').addEventListener('click',()=>{searchTerm='';sortKey='tpi';sortDir=-1;columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach(chip=>chip.classList.toggle('active',chip.dataset.f==='tpi'));renderTable();});
 const nameColumnToggle=document.getElementById('toggleNameColumn');
