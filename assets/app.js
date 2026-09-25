@@ -9,6 +9,7 @@ function pass(t){
   if(showSelectedOnly&&!selectedOnlySnapshot.includes(t.codigo))return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+t.sireName+" "+t.damName+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
   for(const [key,value] of Object.entries(columnFilters)){
+    if(key==='evaluacion'){if(value&&(value==='probado')!==(Number(t.milkR)>90))return false;continue;}
     if(NUMERIC_COLS.includes(key)){
       const range=value||{},hasMin=range.min!==undefined&&range.min!=='',hasMax=range.max!==undefined&&range.max!=='';
       if(!hasMin&&!hasMax)continue;
@@ -25,11 +26,12 @@ function renderTable(){
   const list=sortedFilteredList();
   document.getElementById('tableCount').textContent=`${list.length} ${list.length===1?'semental':'sementales'}`;
   document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===sortKey;btn.classList.toggle('active',active);btn.querySelector('span').textContent=active?(sortDir===1?'↑':'↓'):'↕';});
-  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="25">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="26">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
   tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
-    <td class="sire-primary-cell"><div class="sire-id"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b><small>${Number(t.milkR)>90?'Probado':'Genómico'} · ${t.milkR}%</small></div></div></td>
+    <td class="sire-primary-cell"><div class="sire-id"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b></div></div></td>
     <td class="metric">${t.codigo}</td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
+    <td><span class="table-pill ${Number(t.milkR)>90?'hot':''}">${Number(t.milkR)>90?'Probado':'Genómico'}</span></td>
     <td class="metric">${t.tpi}</td>
     <td class="metric-hi">+${t.nm}</td>
     <td class="metric">+${t.milk} lb</td>
