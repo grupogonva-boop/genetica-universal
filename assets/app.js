@@ -27,7 +27,7 @@ function renderTable(){
   document.getElementById('tableCount').textContent=`${list.length} ${list.length===1?'semental':'sementales'}`;
   document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===sortKey;btn.classList.toggle('active',active);btn.querySelector('span').textContent=active?(sortDir===1?'↑':'↓'):'↕';});
   if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="26">No hay sementales que coincidan con estos filtros.</td></tr>';return;}
-  tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}">
+  tbody.innerHTML=list.map(t=>`<tr data-i="${TOROS.indexOf(t)}" tabindex="0" aria-label="Abrir ficha 360 de ${t.nombre}" class="${compareSelection.includes(t.codigo)?'row-selected':''}">
     <td class="sire-primary-cell"><div class="sire-id"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b></div></div></td>
     <td class="metric">${t.codigo}</td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
@@ -55,7 +55,7 @@ function renderTable(){
     <td class="table-name-cell" title="${t.damName}"><span class="table-name-text">${t.damName}</span></td>
     <td><span class="row-open">›</span></td>
   </tr>`).join('');
-  tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{if(e.target.closest('.compare-check'))return;const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button')||e.target.closest('.compare-check'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
+  tbody.querySelectorAll('tr[data-i]').forEach(row=>{const toro=TOROS[row.dataset.i],open=()=>openModal(toro);row.addEventListener('click',e=>{if(e.target.closest('.compare-check'))return;const photo=e.target.closest('.sire-thumb-button');if(photo){e.stopPropagation();openBullImage(toro,photo);return;}if(document.querySelector('.sire-table').classList.contains('name-collapsed')&&e.target.closest('.sire-primary-cell')){toggleCompare(toro.codigo,!compareSelection.includes(toro.codigo));return;}open();});row.addEventListener('keydown',e=>{if(e.target.closest('.sire-thumb-button')||e.target.closest('.compare-check'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
   tbody.querySelectorAll('.compare-check').forEach(cb=>cb.addEventListener('change',()=>toggleCompare(cb.dataset.codigo,cb.checked)));
 }
 function openModal(t){
@@ -142,7 +142,10 @@ const COMPARE_PERF_FIELDS=[
   {key:'flc',label:'FLC',dir:'high',dec:2},
   {key:'hcc',label:'HCC',dir:'high',dec:2},
 ];
-function syncCompareCheckboxes(){document.querySelectorAll('.compare-check').forEach(cb=>{cb.checked=compareSelection.includes(cb.dataset.codigo);});}
+function syncCompareCheckboxes(){
+  document.querySelectorAll('.compare-check').forEach(cb=>{cb.checked=compareSelection.includes(cb.dataset.codigo);});
+  document.querySelectorAll('#sireRows tr[data-i]').forEach(row=>{const codigo=TOROS[row.dataset.i]?.codigo;row.classList.toggle('row-selected',compareSelection.includes(codigo));});
+}
 function renderCompareTray(){
   const tray=document.getElementById('compareTray');
   if(!compareSelection.length){showSelectedOnly=false;selectedOnlySnapshot=[];tray.hidden=true;tray.innerHTML='';return;}

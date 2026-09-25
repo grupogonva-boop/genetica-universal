@@ -500,6 +500,7 @@ footer{padding:60px 0 38px;border-top:1px solid var(--border-soft);margin-top:20
   .sire-primary-cell .sire-id b{display:block;overflow:hidden;overflow-wrap:break-word;word-break:normal;white-space:normal;font-size:.68rem;line-height:1.18;letter-spacing:-.01em}
   .sire-table.name-collapsed .sire-primary-cell{padding:0;overflow:visible}
   .sire-table.name-collapsed .sire-primary-cell .compare-check{display:none}
+  .sire-table.name-collapsed tr.row-selected .sire-primary-cell{background:var(--red-tint);box-shadow:inset 3px 0 var(--red)}
   .sire-table.name-collapsed .sire-primary-cell .sire-thumb-button{display:none}
   .sire-table.name-collapsed .sire-primary-cell .sire-id{display:block;width:100%;height:100%}
   .sire-table.name-collapsed .sire-primary-cell .sire-id>div{width:100%;height:100%}
