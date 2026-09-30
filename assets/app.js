@@ -271,9 +271,6 @@ document.querySelectorAll('.wa-genomic').forEach(a=>{a.href=waLink('Hola Genéti
 document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');
 const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-function ac(el){const t=+el.dataset.count,d=1400,t0=performance.now(),format=new Intl.NumberFormat('es-MX');function s(n){const p=Math.min((n-t0)/d,1),e=1-Math.pow(1-p,3);el.textContent=format.format(Math.round(t*e));if(p<1)requestAnimationFrame(s);}requestAnimationFrame(s);}
-const cio=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){ac(en.target);cio.unobserve(en.target);}}),{threshold:.5});
-document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
 renderTable();
 
 /* Enlaces compartidos de un toro (?toro=CODIGO): abre su ficha automáticamente. */
