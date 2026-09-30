@@ -97,3 +97,4 @@
 .catalog-family-record small{color:var(--red);font:700 .44rem 'JetBrains Mono',monospace;letter-spacing:.08em}
 .catalog-family-record b{margin-top:3px;font-size:.56rem;overflow-wrap:anywhere}
 .catalog-family-record>a{border:0;color:var(--red);font-size:.52rem;font-weight:800;grid-column:1/-1}
+.ficha-select-compare{display:none}
