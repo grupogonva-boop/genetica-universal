@@ -25,7 +25,7 @@
     return `<div class="ficha-shell bull-sheet catalog-sheet">
     <div class="bull-sheet-scroll catalog-sheet-scroll">
       <div class="ficha-print-header"><img src="assets/media/asset-01-a51888de9c.png" alt=""><span>Genética Universal</span></div>
-      <header class="catalog-titlebar"><div><small>FICHA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombre}</h2>${t.nombreRegistrado?`<p class="catalog-registered-name">${t.nombreRegistrado}</p>`:''}</div><div class="catalog-title-id"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small>${t.limitado?'<small class="catalog-limited-tag">Limitado</small>':''}</div></header>
+      <header class="catalog-titlebar"><div><small>FICHA 360° · HOLSTEIN · 08/2026</small><h2 id="fichaTitle">${t.nombre}</h2>${t.nombreRegistrado?`<p class="catalog-registered-name">${t.nombreRegistrado}</p>`:''}</div><div class="catalog-title-id"><img class="catalog-title-logo" src="assets/media/logo-lockup-horizontal.png" alt="Genética Universal" width="613" height="90" onerror="this.remove()"><span>${t.codigo}</span><small>${availability(t.disponibilidad).label}</small>${t.limitado?'<small class="catalog-limited-tag">Limitado</small>':''}</div></header>
       <div class="catalog-overview">
         <div class="catalog-facts">
           ${indexBandHTML}
