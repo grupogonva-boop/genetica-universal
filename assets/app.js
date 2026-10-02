@@ -258,6 +258,7 @@ document.querySelectorAll('.column-filters input,.column-filters select').forEac
   else columnFilters[col]=input.value.trim();
   debouncedRenderTable();
 }));
+document.getElementById('toggleFilters').addEventListener('click',e=>{const open=document.getElementById('catalogInteractive').classList.toggle('filters-open');e.currentTarget.setAttribute('aria-expanded',open);e.currentTarget.textContent=open?'Ocultar filtros':'Filtrar';});
 document.getElementById('clearFilters').addEventListener('click',()=>{searchTerm='';sortKey='tpi';sortDir=-1;columnFilters={};document.getElementById('searchInput').value='';document.querySelectorAll('.column-filters input,.column-filters select').forEach(el=>el.value='');document.querySelectorAll('.chip').forEach(chip=>chip.classList.toggle('active',chip.dataset.f==='tpi'));renderTable();});
 const nameColumnToggle=document.getElementById('toggleNameColumn');
 nameColumnToggle?.addEventListener('click',()=>{const table=document.querySelector('.sire-table'),collapsed=table.classList.toggle('name-collapsed');nameColumnToggle.setAttribute('aria-expanded',String(!collapsed));nameColumnToggle.setAttribute('aria-label',collapsed?'Expandir la columna del nombre':'Contraer la columna del nombre');nameColumnToggle.title=collapsed?'Expandir nombre del toro':'Contraer nombre del toro';nameColumnToggle.querySelector('span').textContent=collapsed?'›':'‹';});
