@@ -59,18 +59,21 @@ function renderTable(){
   tbody.querySelectorAll('.compare-check').forEach(cb=>cb.addEventListener('change',()=>toggleCompare(cb.dataset.codigo,cb.checked)));
 }
 let fichaHistoryActive=false;
+// La ficha guarda el código (no la posición): TOROS se reemplaza y reordena
+// cuando llega el catálogo del admin, y una posición vieja apuntaría a otro toro.
+function currentToro(){const codigo=document.getElementById('fichaContent').dataset.toro;return TOROS.find(t=>t.codigo===codigo);}
 function openModal(t){
   document.getElementById('fichaContent').innerHTML=window.FichaRender.renderFichaHTML(t,window.LINEAR_TRAITS,compareSelection.includes(t.codigo));
-  document.getElementById('fichaContent').dataset.toro=TOROS.indexOf(t);document.getElementById('modalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('modalClose').focus();
+  document.getElementById('fichaContent').dataset.toro=t.codigo;document.getElementById('modalBack').classList.add('open');document.body.style.overflow='hidden';document.getElementById('modalClose').focus();
   if(!fichaHistoryActive){history.pushState({ficha:true},'');fichaHistoryActive=true;}
 }
-function navFicha(delta){const list=sortedFilteredList();if(list.length<2)return;const current=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];let i=list.indexOf(current);if(i===-1)i=0;const next=list[(i+delta+list.length)%list.length];openModal(next);}
-function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(photo){openBullImage(TOROS[Number(document.getElementById('fichaContent').dataset.toro)],photo);return;}const ancestorPhoto=e.target.closest('.catalog-ancestor-photo');if(ancestorPhoto){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)],ancestors=Array.isArray(t.ancestors)&&t.ancestors.length?t.ancestors:(t.ancestorPhoto?[t.ancestorPhoto]:[]),target=ancestors[Number(ancestorPhoto.dataset.ancestorIndex||0)],offset=buildGallery(t).findIndex(item=>item.foto===target?.foto);openBullImage(t,ancestorPhoto,offset<0?0:offset);return;}if(e.target.closest('.ficha-nav-prev')){navFicha(-1);return;}if(e.target.closest('.ficha-nav-next')){navFicha(1);return;}if(e.target.closest('.ficha-quote')){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];window.open(waLink(CONFIG.msgToro(t)),'_blank','noopener');return;}
+function navFicha(delta){const list=sortedFilteredList();if(list.length<2)return;const current=currentToro();let i=list.indexOf(current);if(i===-1)i=0;const next=list[(i+delta+list.length)%list.length];openModal(next);}
+function handleFichaClick(e){const photo=e.target.closest('.ficha-photo');if(photo){openBullImage(currentToro(),photo);return;}const ancestorPhoto=e.target.closest('.catalog-ancestor-photo');if(ancestorPhoto){const t=currentToro(),ancestors=Array.isArray(t.ancestors)&&t.ancestors.length?t.ancestors:(t.ancestorPhoto?[t.ancestorPhoto]:[]),target=ancestors[Number(ancestorPhoto.dataset.ancestorIndex||0)],offset=buildGallery(t).findIndex(item=>item.foto===target?.foto);openBullImage(t,ancestorPhoto,offset<0?0:offset);return;}if(e.target.closest('.ficha-nav-prev')){navFicha(-1);return;}if(e.target.closest('.ficha-nav-next')){navFicha(1);return;}if(e.target.closest('.ficha-quote')){const t=currentToro();window.open(waLink(CONFIG.msgToro(t)),'_blank','noopener');return;}
   const shareBtn=e.target.closest('.ficha-share');
-  if(shareBtn){const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];shareBullLink(t,shareBtn);return;}
+  if(shareBtn){const t=currentToro();shareBullLink(t,shareBtn);return;}
   const selectBtn=e.target.closest('.ficha-select-compare');
   if(selectBtn){
-    const t=TOROS[Number(document.getElementById('fichaContent').dataset.toro)];
+    const t=currentToro();
     const nowSelected=!compareSelection.includes(t.codigo);
     toggleCompare(t.codigo,nowSelected);
     selectBtn.classList.toggle('active',nowSelected);
@@ -414,7 +417,9 @@ async function syncRemoteCatalog(){
     const merged=TOROS.map(base=>{const row=remote.get(base.codigo);if(!row)return null;remote.delete(base.codigo);return{...base,...row,codigo:base.codigo,foto:row.foto||base.foto};}).filter(Boolean);
     remote.forEach(row=>{if(row.activo!==false)merged.push(row);});
     TOROS=merged.filter(t=>t.activo!==false);
-    renderTable();renderHero();tryOpenSharedFicha();
+    renderTable();renderHero();
+    if(document.getElementById('modalBack').classList.contains('open')){const t=currentToro();if(t)document.getElementById('fichaContent').innerHTML=window.FichaRender.renderFichaHTML(t,window.LINEAR_TRAITS,compareSelection.includes(t.codigo));}
+    tryOpenSharedFicha();
   }catch{/* El catálogo incluido sigue siendo el respaldo sin interrumpir la web. */}finally{clearTimeout(timeout);}
 }
 syncRemoteCatalog();
