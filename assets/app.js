@@ -126,9 +126,9 @@ document.getElementById('heroCatalogBtn')?.addEventListener('click',()=>{documen
 document.getElementById('catalogModalClose').addEventListener('click',closeCatalogModal);
 document.getElementById('catalogModalBack').addEventListener('click',e=>{if(e.target.id==='catalogModalBack')closeCatalogModal();});
 
-/* Comparador de sementales: hasta 3 seleccionados desde la tabla. */
+/* Comparador de sementales: hasta 5 seleccionados desde la tabla. */
 let compareSelection=[];
-const COMPARE_MAX=3;
+const COMPARE_MAX=5;
 const COMPARE_INFO_FIELDS=[
   {label:'Nombre registrado',get:t=>t.nombreRegistrado},
   {label:'Código NAAB',get:t=>t.codigo},
@@ -205,18 +205,15 @@ function computeCompareStars(bulls){
     values.forEach((v,i)=>{if(Number.isFinite(v)&&v===best)wins[i]++;});
   });
   const stars=bulls.map(()=>0);
-  const order=wins.map((w,i)=>i).sort((a,b)=>wins[b]-wins[a]);
-  if(bulls.length===2){
-    if(wins[order[0]]>wins[order[1]])stars[order[0]]=1;
-  }else{
-    const uniqueWins=[...new Set(order.map(i=>wins[i]))].sort((a,b)=>b-a);
-    order.forEach(i=>{stars[i]=Math.max(3-uniqueWins.indexOf(wins[i]),0);});
-  }
+  // El mejor (más índices ganados) recibe 5 estrellas y cada lugar siguiente
+  // una menos; los empates comparten lugar.
+  const uniqueWins=[...new Set(wins)].sort((a,b)=>b-a);
+  wins.forEach((w,i)=>{stars[i]=Math.max(5-uniqueWins.indexOf(w),1);});
   return stars;
 }
 function renderComparisonHTML(bulls){
   const stars=computeCompareStars(bulls);
-  const head=`<tr><th></th>${bulls.map((t,i)=>`<th><div class="compare-head">${stars[i]?`<div class="cmp-stars" title="Toro mejor evaluado (${stars[i]} de ${bulls.length===2?1:3})">${'★'.repeat(stars[i])}</div>`:''}<img src="${t.foto}" alt=""><b>${t.nombre}</b><small>${t.codigo}</small></div></th>`).join('')}</tr>`;
+  const head=`<tr><th></th>${bulls.map((t,i)=>`<th><div class="compare-head">${stars[i]?`<div class="cmp-stars" title="${stars[i]} de 5 estrellas">${'★'.repeat(stars[i])}</div>`:''}<img src="${t.foto}" alt=""><b>${t.nombre}</b><small>${t.codigo}</small></div></th>`).join('')}</tr>`;
   const infoRows=COMPARE_INFO_FIELDS.map(f=>`<tr><th>${f.label}</th>${bulls.map(t=>`<td>${f.get(t)||'—'}</td>`).join('')}</tr>`).join('');
   const perfRows=COMPARE_PERF_FIELDS.map(f=>{
     const values=bulls.map(t=>Number(t[f.key]));
