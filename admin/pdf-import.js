@@ -170,8 +170,8 @@ function parsePage(lines) {
   row.gefi = inlineNum(lines, 'gEFI');
   // Solo los toros probados traen "1491 Dtrs 53 Herds"; en genómicos no aparece.
   m = /(\d[\d,]*)\s*Dtrs\s+(\d[\d,]*)\s*Herds/i.exec(text);
-  row.daughters = m ? num(m[1]) : null;
-  row.herds = m ? num(m[2]) : null;
+  row.daughters = m && num(m[1]) > 0 ? num(m[1]) : null;
+  row.herds = m && num(m[2]) > 0 ? num(m[2]) : null;
   for (const k of ['mastitis', 'fertIndex', 'livability', 'dpr', 'sce', 'rfi', 'msp', 'efi', 'gefi']) if (row[k] == null) warnings.push(k);
 
   m = /\bTPI\s+([+-]?\d+)/.exec(text); row.tpi = m ? num(m[1]) : null;
