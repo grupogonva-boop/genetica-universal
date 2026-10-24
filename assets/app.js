@@ -9,7 +9,7 @@ function pass(t){
   if(showSelectedOnly&&!selectedOnlySnapshot.includes(t.codigo))return false;
   if(searchTerm&&!(t.nombre+" "+t.codigo+" "+t.ped+" "+t.sireName+" "+t.damName+" "+availability(t.disponibilidad).label).toLowerCase().includes(searchTerm.toLowerCase()))return false;
   for(const [key,value] of Object.entries(columnFilters)){
-    if(key==='evaluacion'){if(value&&(value==='probado')!==(Number(t.milkR)>90))return false;continue;}
+    if(key==='evaluacion'){if(value&&(value==='probado')!==isProbado(t))return false;continue;}
     if(NUMERIC_COLS.includes(key)){
       const range=value||{},hasMin=range.min!==undefined&&range.min!=='',hasMax=range.max!==undefined&&range.max!=='';
       if(!hasMin&&!hasMax)continue;
@@ -20,7 +20,10 @@ function pass(t){
   }
   return true;
 }
-function sortedFilteredList(){return TOROS.filter(pass).sort((a,b)=>{if(!sortKey)return 0;const av=a[sortKey],bv=b[sortKey];return (typeof av==='number'?av-bv:String(av).localeCompare(String(bv),'es'))*sortDir;});}
+// Probado = tiene hijas registradas; genómico = sin hijas. El respaldo estático
+// no trae el campo, así que ahí se usa la confiabilidad como antes.
+function isProbado(t){return t.daughters===undefined?Number(t.milkR)>90:Number(t.daughters)>0;}
+function sortedFilteredList(){return TOROS.filter(pass).sort((a,b)=>{if(!sortKey)return 0;const av=sortKey==='evaluacion'?Number(isProbado(a)):a[sortKey],bv=sortKey==='evaluacion'?Number(isProbado(b)):b[sortKey];return (typeof av==='number'?av-bv:String(av).localeCompare(String(bv),'es'))*sortDir;});}
 function renderTable(){
   const tbody=document.getElementById('sireRows');
   const list=sortedFilteredList();
@@ -31,7 +34,7 @@ function renderTable(){
     <td class="sire-primary-cell"><div class="sire-id"><input type="checkbox" class="compare-check" data-codigo="${t.codigo}" aria-label="Seleccionar ${t.nombre} para comparar" ${compareSelection.includes(t.codigo)?'checked':''}><button class="sire-thumb-button" type="button" aria-label="Ampliar fotografía de ${t.nombre}" title="Ver fotografía ampliada"><img class="sire-thumb" src="${t.foto}" alt="" loading="lazy"></button><div><b>${t.nombre}</b></div></div></td>
     <td class="metric">${t.codigo}</td>
     <td><span class="availability-tag availability-${t.disponibilidad}">${availability(t.disponibilidad).short}</span></td>
-    <td><span class="table-pill ${Number(t.milkR)>90?'hot':''}">${Number(t.milkR)>90?'Probado':'Genómico'}</span></td>
+    <td><span class="table-pill ${isProbado(t)?'hot':''}">${isProbado(t)?'Probado':'Genómico'}</span></td>
     <td class="metric">${t.tpi}</td>
     <td class="metric-hi">+${t.nm}</td>
     <td class="metric">+${t.milk} lb</td>
