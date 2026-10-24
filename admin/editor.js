@@ -33,6 +33,7 @@ const SECTIONS={
   fieldsEconomia:[
     {key:'nm',label:'NM$',type:'number'},{key:'cm',label:'CM$',type:'number'},{key:'cfp',label:'CFP',type:'number'},{key:'feedSaved',label:'Feed Saved',type:'number'},
     {key:'rfi',label:'RFI',type:'number',step:'0.1'},{key:'msp',label:'MSP',type:'number',step:'0.1'},{key:'efi',label:'EFI',type:'number',step:'0.1'},{key:'gefi',label:'gEFI',type:'number',step:'0.1'},
+    {key:'daughters',label:'Hijas',type:'number'},{key:'herds',label:'Establos',type:'number'},
   ],
   fieldsSalud:[
     {key:'pl',label:'Vida productiva (PL)',type:'number',step:'0.1'},{key:'dpr',label:'DPR',type:'number',step:'0.1'},{key:'ccr',label:'CCR',type:'number',step:'0.1'},
