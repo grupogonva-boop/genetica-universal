@@ -3,7 +3,7 @@
 // (admin/vendor/ficha-render.js, copia idéntica de este archivo).
 (function(global){
   const isQ=(t)=>t.beta==="A2/A2"&&t.kappa==="BB";
-  const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',short:'CONV'},'conv-sex':{label:'Sexado + Convencional',short:'SEX + CONV'},'s-conv':{label:'Súper convencional',short:'S-CONV'}};
+  const AVAILABILITY={sex:{label:'Sexado',short:'SEX'},conv:{label:'Convencional',short:'CONV'},'conv-sex':{label:'Sexado + Convencional',short:'SEX + CONV'},'s-conv':{label:'Súper convencional',short:'S-CONV'},prox:{label:'Próximamente',short:'PRÓXIMAMENTE'}};
   const availability=(key)=>AVAILABILITY[key]||{label:'Consultar',short:'CONSULTAR'};
   const signed=n=>`${Number(n)>0?'+':''}${n}`;
   function fichaDerived(t,linearTraits){

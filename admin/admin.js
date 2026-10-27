@@ -62,7 +62,7 @@ const FIELDS=[
   {key:'sta',label:'STA',aliases:['sta']},
   ...TRAIT_TEMPLATE.map(([label],i)=>({key:`trait_${i}`,label:`Rasgo: ${label}`,aliases:[label,`rasgo ${label}`]})),
 ];
-const DISPONIBILIDAD_MAP={'sexado':'sex','convencional':'conv','sexado convencional':'conv-sex','sexado + convencional':'conv-sex','super convencional':'s-conv'};
+const DISPONIBILIDAD_MAP={'sexado':'sex','convencional':'conv','sexado convencional':'conv-sex','sexado + convencional':'conv-sex','super convencional':'s-conv','proximamente':'prox'};
 const state={headers:[],rawRows:[],mapping:{},rows:[],errors:[],warnings:[],file:null,mode:'excel'};
 const $=selector=>document.querySelector(selector);
 const normalize=value=>String(value??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -153,7 +153,7 @@ function normalizeRows(){
     if(!codigo)rowErrors.push('Falta código');if(!nombre)rowErrors.push('Falta nombre');if(codigo&&seen.has(codigo))rowErrors.push('Código duplicado');seen.add(codigo);
     const genomic_data={};state.headers.forEach((header,col)=>{if(!used.has(col)&&cleanText(row[col])!=='')genomic_data[header]=cleanText(row[col],500);});
     const activeRaw=normalize(valueAt(row,'activo'));const activo=!['no','false','0','inactivo','inactive','agotado'].includes(activeRaw);
-    const disponibilidadRaw=normalize(valueAt(row,'disponibilidad'));const disponibilidad=DISPONIBILIDAD_MAP[disponibilidadRaw]||(['sex','conv','conv-sex','s-conv'].includes(disponibilidadRaw)?disponibilidadRaw:'');
+    const disponibilidadRaw=normalize(valueAt(row,'disponibilidad'));const disponibilidad=DISPONIBILIDAD_MAP[disponibilidadRaw]||(['sex','conv','conv-sex','s-conv','prox'].includes(disponibilidadRaw)?disponibilidadRaw:'');
     const traits=TRAIT_TEMPLATE.map(([label,left,right],i)=>{const value=cleanNumber(valueAt(row,`trait_${i}`))??0;return[label,value,left,right,value<0?left:right];});
     const normalized={
       codigo,nombre,

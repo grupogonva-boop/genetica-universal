@@ -17,7 +17,7 @@ const SECTIONS={
     {key:'codigo',label:'Código NAAB',required:true},
     {key:'nombre',label:'Nombre',required:true},
     {key:'nombreRegistrado',label:'Nombre registrado'},
-    {key:'disponibilidad',label:'Presentación',type:'select',options:[['','Consultar'],['sex','Sexado'],['conv','Convencional'],['conv-sex','Sexado + Convencional'],['s-conv','Súper convencional']]},
+    {key:'disponibilidad',label:'Presentación',type:'select',options:[['','Consultar'],['sex','Sexado'],['conv','Convencional'],['conv-sex','Sexado + Convencional'],['s-conv','Súper convencional'],['prox','Próximamente']]},
     {key:'raza',label:'Raza'},{key:'beta',label:'Beta caseína'},{key:'kappa',label:'Kappa caseína'},
   ],
   fieldsPedigri:[
